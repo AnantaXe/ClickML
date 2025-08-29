@@ -3,13 +3,9 @@
 /build
 /dist
 *.log
-*.sqlite3
-*.pyc
-__pycache__/
 /venv
 .DS_Store
 *.db
 *.pkl
 *.cache
-/.pytest_cache
-/.mypy_cache
+/.vscode
