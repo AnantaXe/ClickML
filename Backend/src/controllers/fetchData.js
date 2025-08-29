@@ -55,7 +55,6 @@ function extractFeaturesNames(data, fields = new Set(), prefix = "") {
     return Array.from(fields);
 }
 
-
 exports.extractData = async (req, res) => {
     try {
         const { pipelineName, steps } = req.body;
@@ -133,11 +132,32 @@ exports.extractData = async (req, res) => {
         res.json({
             message: "Pipeline executed successfully",
             pipelineName,
-            resultPreview: extractedFields
+            resultPreview: extractedFields,
         });
     } catch (err) {
         logger.error({ error: err.message }, "Pipeline execution failed");
         console.error(err.message);
         res.status(500).json({ error: err.message });
+    }
+};
+
+exports.transformData = async (req, res) => {
+    try {
+        let { features } = req.body;
+
+        if (!Array.isArray(features)) {
+            throw new Error("Expected features as array");
+        }
+
+        const cleaned = features.map((f) => f.replace(/^"|"$/g, ""));
+        logger.info({ cleaned }, "Incoming cleaned features");
+
+        res.json({
+            message: "Transformation successful",
+            result: cleaned,
+        });
+    } catch (error) {
+        logger.error({ error: error.message }, "Transformation failed");
+        res.status(500).json({ error: error.message });
     }
 };

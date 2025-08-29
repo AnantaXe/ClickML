@@ -1,5 +1,5 @@
 const express = require("express");
-const { extractData } = require("../controllers/fetchData");
+const { extractData, transformData } = require("../controllers/fetchData");
 const router = express.Router();
 const pino = require("pino");
 const fs = require("fs");
@@ -29,6 +29,7 @@ const logger = pino({
 logger.info("Setting up /extractData route");
 
 router.post("/extractData", extractData);
+router.post("/transform", transformData);
 
 logger.info("Request received for /extractData");
 
