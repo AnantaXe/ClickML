@@ -9,3 +9,5 @@
 *.pkl
 *.cache
 /.vscode
+
+*.excalidraw

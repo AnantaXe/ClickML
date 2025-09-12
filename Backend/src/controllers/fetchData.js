@@ -3,10 +3,23 @@ const axios = require("axios");
 const pino = require("pino");
 // const router = express.Router();
 const fs = require("fs");
+const { testdb } = require("./testdb");
+
+// const { Client } = require("pg");
 
 if (!fs.existsSync("./logs")) {
     fs.mkdirSync("./logs", { recursive: true });
 }
+
+// const client = new Client({
+//     user: "postgres",
+//     password: "postgres",
+//     host: "localhost",
+//     port: 5432,
+//     database: "postgres",
+// });
+
+// await client.connect();
 
 const logger = pino({
     level: process.env.LOG_LEVEL || "info",
@@ -156,6 +169,12 @@ exports.transformData = async (req, res) => {
             message: "Transformation successful",
             result: cleaned,
         });
+
+        // await client.connect()
+        
+        testdb();
+        // await client.end();
+
     } catch (error) {
         logger.error({ error: error.message }, "Transformation failed");
         res.status(500).json({ error: error.message });
