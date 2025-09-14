@@ -3,7 +3,9 @@ const axios = require("axios");
 const pino = require("pino");
 // const router = express.Router();
 const fs = require("fs");
-const { testdb } = require("./testdb");
+// const { testdb } = require("./testdb");
+const { etlPush } = require("./etlController");
+const e = require("express");
 
 // const { Client } = require("pg");
 
@@ -20,6 +22,9 @@ if (!fs.existsSync("./logs")) {
 // });
 
 // await client.connect();
+
+let etl_configuration_endpoint = ""
+let etl_configuration_pipelineName = ""
 
 const logger = pino({
     level: process.env.LOG_LEVEL || "info",
@@ -68,10 +73,12 @@ function extractFeaturesNames(data, fields = new Set(), prefix = "") {
     return Array.from(fields);
 }
 
-exports.extractData = async (req, res) => {
+exports.fetchData = async (req, res) => {
     try {
         const { pipelineName, steps } = req.body;
         logger.info({ pipelineName, steps }, "Received pipeline request");
+
+        etl_configuration_pipelineName = pipelineName
 
         if (!steps || !Array.isArray(steps)) {
             logger.error("Pipeline steps are required");
@@ -89,6 +96,7 @@ exports.extractData = async (req, res) => {
 
             switch (step.type) {
                 case "fetch_api":
+                    etl_configuration_endpoint = step.config.url
                     const { url, method, headers, params, body } = step.config;
                     logger.info({ url, method }, "Fetching data from API");
 
@@ -154,7 +162,7 @@ exports.extractData = async (req, res) => {
     }
 };
 
-exports.transformData = async (req, res) => {
+exports.selectFeatures = async (req, res) => {
     try {
         let { features } = req.body;
 
@@ -170,10 +178,19 @@ exports.transformData = async (req, res) => {
             result: cleaned,
         });
 
-        // await client.connect()
         
-        testdb();
-        // await client.end();
+
+        etl_configuration = {
+            pipelinename: etl_configuration_pipelineName,
+            input_features: cleaned,
+            endpoint: etl_configuration_endpoint,
+            cron: "*/3 * * * *", // every 3 minutes
+        }
+
+        etlPush(etl_configuration);
+
+        logger.info("Transformation process completed", { result: res });
+
 
     } catch (error) {
         logger.error({ error: error.message }, "Transformation failed");

@@ -1,5 +1,6 @@
 const express = require("express");
-const { extractData, transformData } = require("../controllers/fetchData");
+const { fetchData, selectFeatures } = require("../controllers/featureSelection");
+const { etlPush } = require("../controllers/etlController");
 const router = express.Router();
 const pino = require("pino");
 const fs = require("fs");
@@ -26,11 +27,12 @@ const logger = pino({
 });
 
 // POST /ETL - execute ETL pipeline
-logger.info("Setting up /extractData route");
+logger.info("Setting up /fetchData route");
 
-router.post("/extractData", extractData);
-router.post("/transform", transformData);
+router.post("/fetchData", fetchData);
+router.post("/selectfeatures", selectFeatures);
+router.post("/etlpush", etlPush);
 
-logger.info("Request received for /extractData");
+logger.info("Request received for /fetchData");
 
 module.exports = router;

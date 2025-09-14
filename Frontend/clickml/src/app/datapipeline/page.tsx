@@ -27,7 +27,7 @@ export default function DataPipeline() {
     });
 
     function sendPipelineData() {
-        fetch("http://localhost:3002/etl/extractData", {
+        fetch("http://localhost:3002/etl/fetchData", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(initialData),
@@ -102,7 +102,7 @@ export default function DataPipeline() {
             (f) => f.replace(/^"|"$/g, "") // removes surrounding quotes
         );
 
-        fetch("http://localhost:3002/etl/transform", {
+        fetch("http://localhost:3002/etl/selectfeatures", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ features: cleanedFeatures }),
