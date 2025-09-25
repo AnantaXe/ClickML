@@ -1,0 +1,6 @@
+prefect
+fastapi[standard]
+pandas
+numpy
+scikit-learn
+pydantic
