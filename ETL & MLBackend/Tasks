@@ -1,0 +1,11 @@
+Data Cleaning
+    -Missing Values
+    -Lower Case
+    -Duplicate Rows
+    -Gender Column Handle Using regular expression
+    -Date Column Handle - DateType Data
+
+Data Preprocess
+    -Handling categorial features
+    -Check Data Drift
+    -Standardization
