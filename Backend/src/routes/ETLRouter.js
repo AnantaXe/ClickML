@@ -4,7 +4,8 @@ const { etlPush } = require("../controllers/etlController");
 const router = express.Router();
 const pino = require("pino");
 const fs = require("fs");
-const { log } = require("console");
+const { validateData, validateAPI, APIPreview } = require("../controllers/validatation");
+const { controlIngestion } = require("../controllers/controlIngestion");
 
 if (!fs.existsSync("./logs")) {
     fs.mkdirSync("./logs", { recursive: true });
@@ -27,12 +28,18 @@ const logger = pino({
 });
 
 // POST /ETL - execute ETL pipeline
-logger.info("Setting up /fetchData route");
+// logger.info("Setting up /fetchData route");
+
+router.post("/validateData", validateData)
+router.post("/validateApi", validateAPI);
 
 router.post("/fetchData", fetchData);
 router.post("/selectfeatures", selectFeatures);
 router.post("/etlpush", etlPush);
 
-logger.info("Request received for /fetchData");
+router.post("/api/apipreview", APIPreview)
+router.post("/api/ingestion", controlIngestion);
+
+// logger.info("Request receive/d for /fetchData");
 
 module.exports = router;

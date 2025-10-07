@@ -1,2 +1,3 @@
-prefect
+astronomer
+airflow
 fastapi[standard]

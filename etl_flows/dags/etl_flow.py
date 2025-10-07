@@ -22,11 +22,9 @@ def transform(data: list[dict]):
 
 
 @task
-def load(data: list[dict], destination: str):
+def load(data: list[dict]):
     # Placeholder for loading logic
-    print(f"📥 Loading data to {destination}")
-
-    
+    print(f"📥 Loading data to destination")
 
     return True
 

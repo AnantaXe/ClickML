@@ -5,7 +5,7 @@ const pino = require("pino");
 const fs = require("fs");
 // const { testdb } = require("./testdb");
 const { etlPush } = require("./etlController");
-const e = require("express");
+// const e = require("express");
 
 // const { Client } = require("pg");
 
@@ -60,14 +60,14 @@ const logger = pino({
 //     return Array.from(fields); // return unique keys as array
 // }
 
-function extractFeaturesNames(data, fields = new Set(), prefix = "") {
+exports.extractFeaturesNames = function(data, fields = new Set(), prefix = "") {
     if (Array.isArray(data)) {
-        data.forEach((item) => extractFeaturesNames(item, fields, prefix));
+        data.forEach((item) => exports.extractFeaturesNames(item, fields, prefix));
     } else if (typeof data === "object" && data !== null) {
         Object.keys(data).forEach((key) => {
             const fullKey = prefix ? `${prefix}.${key}` : key; // nested keys in dot notation
             fields.add(fullKey);
-            extractFeaturesNames(data[key], fields, fullKey);
+            exports.extractFeaturesNames(data[key], fields, fullKey);
         });
     }
     return Array.from(fields);

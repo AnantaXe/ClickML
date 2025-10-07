@@ -122,6 +122,9 @@ export const ingestionSlice = createSlice({
         resetIngestionForm: () => initialIngestionFormState,
         resetSourceConfig: (state) => {
             state.sourceConfig = {};
+        },
+        resetSelectedFields: (state) => {
+            state.selectedFields = [];
         }
     },
 });
@@ -171,7 +174,7 @@ export const monitoringSlice = createSlice({
     },
 });
 
-export const { updateIngestionForm, resetIngestionForm, resetSourceConfig } = ingestionSlice.actions;
+export const { updateIngestionForm, resetIngestionForm, resetSourceConfig, resetSelectedFields } = ingestionSlice.actions;
 export const { updateTransformationForm, resetTransformationForm } =
     transformationSlice.actions;
 export const { updateEnrichmentForm, resetEnrichmentForm } =

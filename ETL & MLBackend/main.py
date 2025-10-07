@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Request
+from fastapi.concurrency import run_in_threadpool
 # from prefect import flow
 # from prefect.server.schemas.schedules import CronSchedule
 # from prefect.schedules import CronSchedule 
 from etl_flows.ETLSchedular.etl_flow import etl_flow   # <-- import the flow
 
 from Machine_learning.Components.Model_trainer import ModelTrainer
-from fastapi import FastAPI
+# from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -18,23 +19,26 @@ async def create_pipeline(request: Request):
     # every_three_min = IntervalSchedule(interval=timedelta(minutes=3))
     cron_expr = cfg.get("cron")
 
+    schedule = None
+    if cron_expr:
+        schedule = {
+            "cron": cron_expr,
+            "timezone": "UTC"
+        }
+
     # create the deployment directly from the flow
-    await etl_flow.deploy(
+    await run_in_threadpool(
+        etl_flow.deploy,
         name=cfg["pipelinename"],
         parameters={
             "pipelinename": cfg["pipelinename"],
             "endpoint": cfg["endpoint"],
             "input_features": cfg["input_features"],
         },
-        # schedule=cron_schedule,
-        schedule={       # <- pass a schedule dictionary
-            "cron": cron_expr,
-            "timezone": "UTC"
-        },
-        work_pool_name="myworkpool", 
-
-        # image="imckr/clickml-etl:latest",
-        storage="github/AnantaXe/ClickML@main",
+        work_pool_name="myworkpool",
+        schedule=schedule,
+        image="imckr/my-prefect-image:latest",
+        # image="prefecthq/prefect-client:3-latest",
     )
 
     return {"status": "scheduled"}
@@ -58,5 +62,4 @@ async def create_item(item: Item):
 
     report,file_path=ModelTrainer.model_training_initiate(data,input_features,target_feature,model,params,user_database)
     
-    return report,file_path
-
+    return {"report": report, "file_path": file_path}

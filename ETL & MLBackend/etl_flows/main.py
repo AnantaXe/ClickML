@@ -29,8 +29,8 @@ async def create_pipeline(request: Request):
         },
         work_pool_name="myworkpool", 
 
-        # image="imckr/clickml-etl:latest",
-        storage="github/AnantaXe/ClickML@main",
+        image="imckr/my-prefect-image:latest",
+        # storage="github/AnantaXe/ClickML@main",
     )
 
     return {"status": "scheduled"}

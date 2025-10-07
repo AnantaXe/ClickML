@@ -7,14 +7,6 @@ import {
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 
 export default function IngestionForm() {
-    // const [ingestionInitialState, setIngestionInitialState] = useState({
-    //     pipeline_name: "",
-    //     cron: "0 2 * * *",
-    //     sourceType: "",
-    //     destinationType: "",
-    //     sourceConfig: {} as Record<string, string>,
-    //     destinationConfig: {} as Record<string, string>,
-    // });
 
     const ingestionFormState = useAppSelector((state) => state.ingestion);
     const dispatch = useAppDispatch();
@@ -31,27 +23,16 @@ export default function IngestionForm() {
                 <input
                     placeholder="Pipeline Name"
                     value={ingestionFormState.pipelineName}
-                    // onChange={(e) =>
-                    //     handleChange(
-                    //         "ingestion",
-                    //         "pipeline_name",
-                    //         e.target.value
-                    //     )
-                    // }
                     onChange={(e) => {
                         setIngestionInitialState({
                             ...ingestionFormState,
                             pipelineName: e.target.value,
                         });
-                        // dispatch()
                     }}
                     className="border p-2 rounded"
                 />
                 <select
                     value={ingestionFormState.sourceType}
-                    // onChange={(e) =>
-                    //     handleChange("ingestion", "sourceType", e.target.value)
-                    // }
                     onChange={(e) => {
                         setIngestionInitialState({
                             ...ingestionFormState,
@@ -114,13 +95,6 @@ export default function IngestionForm() {
                                 });
                                 dispatch(resetURLVerification());
                             }}
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "database",
-                            //         e.target.value
-                            //     )
-                            // }
                             className="border p-2 rounded"
                         />
                         <input
@@ -135,26 +109,10 @@ export default function IngestionForm() {
                                     },
                                 })
                             }
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "tableName",
-                            //         e.target.value
-                            //     )
-                            // }
                             className="border p-2 rounded"
                         />
                         <input
                             placeholder="User"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "user",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -169,14 +127,6 @@ export default function IngestionForm() {
                         <input
                             type="password"
                             placeholder="Password"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "password",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -198,14 +148,6 @@ export default function IngestionForm() {
                             pattern="https?://.+"
                             required={true}
                             placeholder="API URL"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "apiUrl",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>{
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -221,14 +163,6 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="API Key"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "apiKey",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -248,14 +182,6 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="Bucket Name"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "bucketName",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -270,14 +196,6 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="AWS Access Key"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "awsAccessKey",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 setIngestionInitialState({
                                     ...ingestionFormState,
@@ -292,14 +210,6 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="AWS Secret Key"
-                            // onChange={(e) =>
-                            //     handleNestedChange(
-                            //         "ingestion",
-                            //         "sourceConfig",
-                            //         "awsSecretKey",
-                            //         e.target.value
-                            //     )
-                            // }
                             onChange={(e) =>
                                 dispatch(
                                     updateIngestionForm({
@@ -320,9 +230,6 @@ export default function IngestionForm() {
                 <input
                     placeholder="Cron (e.g. 0 * * * *)"
                     value={ingestionFormState.cron}
-                    // onChange={(e) =>
-                    //     handleChange("ingestion", "cron", e.target.value)
-                    // }
                     onChange={(e) =>
                         setIngestionInitialState({
                             ...ingestionFormState,

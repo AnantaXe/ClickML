@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { spaceGrotesk } from "@/Fonts/font";
-// Use a public path string if the image is in the public directory
 const NotOk = "/images/notOk.png";
-// Use a public path string if the image is in the public directory
 const Ok = "/images/ok.png";
+const Arrow = "/images/arrow.png";
+const Loading = "/images/loading.gif";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks/hooks";
 import {
     IngestionForm,
@@ -20,6 +19,8 @@ import {
     resetTransformationForm,
     updateIngestionForm,
     updateURLVerification,
+    resetSelectedFields,
+    resetURLVerification,
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 import {
     updateFilteredFieldsName,
@@ -31,6 +32,8 @@ export default function NewDataPipeline() {
     const Forms = ["Ingestion", "Transformation", "Enrichment", "Monitoring"];
     const [activeForm, setActiveForm] = useState(Forms[0]);
 
+    const [filterPreview, setFilterPreview] = useState(false);
+
     const ingestionFormState = useAppSelector((state) => state.ingestion);
     // const transformationFormState = useAppSelector(
     //     (state) => state.transformation
@@ -39,16 +42,12 @@ export default function NewDataPipeline() {
     // const monitoringFormState = useAppSelector((state) => state.monitoring);
 
     //----------- url verification status -----------//
+
     const urlVerificationStatus = useAppSelector(
         (state) => state.urlVerification
     );
 
-    //----------- Field Names State -----------//
-
-    // interface FieldNamesState {
-    //     OriginalFieldsName: string[];
-    //     // add other properties if needed
-    // }
+    //----------- Field Names -----------//
 
     const OriginalFieldNames = useAppSelector(
         (state) => state.fieldnames.OriginalFieldsName
@@ -56,6 +55,12 @@ export default function NewDataPipeline() {
     const FilteredFieldNames = useAppSelector(
         (state) => state.fieldnames.FilteredFieldsName
     );
+
+    //----------- Step Two Handler -----------//
+    const [stepTwoLoading, setStepTwoLoading] = useState(false);
+    const handleStepTwo = () => {
+        setStepTwoLoading(true); // temporary Setting please remove later
+    }
 
     // const dispatch = useAppDispatch(resetEnrichmentForm());
     const dispatch = useAppDispatch();
@@ -66,11 +71,27 @@ export default function NewDataPipeline() {
         event.preventDefault();
         console.log("Active Form:", activeForm);
         // Reset URL verification status
-        dispatch(updateURLVerification({ isValid: 0 }));
+
+        dispatch(resetURLVerification());
 
         if (activeForm === "Ingestion") {
             // formData = JSON.stringify(ingestionFormState);
             if (ingestionFormState.sourceType === "api") {
+                if (!ingestionFormState.sourceConfig.apiUrl) {
+                    dispatch(
+                        updateURLVerification({
+                            isValid: -1,
+                            urlVerificationMessage: "Please enter API URL",
+                        })
+                    );
+                    return;
+                }
+                dispatch(
+                    updateURLVerification({
+                        isValid: 2,
+                        urlVerificationMessage: "Validating...",
+                    })
+                );
                 const apiUrl = ingestionFormState.sourceConfig.apiUrl;
                 const apiKey = ingestionFormState.sourceConfig.apiKey
                     ? ingestionFormState.sourceConfig.apiKey
@@ -119,16 +140,8 @@ export default function NewDataPipeline() {
     //----------- handle form Submission -----------//
     const handleSubmit = (activeForm: string) => {
         dispatch(resetFieldNames());
-        console.log("Getting Preview...");
-        // const apiEndpoint = `http://localhost:3002/etl/api/${activeForm.toLowerCase()}`;
-        // const response = fetch(apiEndpoint, {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify(formData),
-        // });
-        // console.log("Response from API:", response);
+        dispatch(resetSelectedFields());
+        setStepTwoLoading(false); // temporary Setting please remove later
 
         if (activeForm === "Ingestion") {
             const response = fetch("http://localhost:3002/etl/api/apipreview", {
@@ -140,6 +153,7 @@ export default function NewDataPipeline() {
             })
                 .then((res) => res.json())
                 .then((data) => {
+                    setFilterPreview(true);
                     console.log("API Preview Response:", data);
                     dispatch(updateOriginalFieldsName(data));
                 })
@@ -163,7 +177,6 @@ export default function NewDataPipeline() {
             } else {
                 updatedFilteredFields = [...FilteredFieldNames];
             }
-
         } else {
             updatedFilteredFields = FilteredFieldNames.filter(
                 (f) => f !== field
@@ -179,14 +192,12 @@ export default function NewDataPipeline() {
     return (
         <>
             <div className="flex">
-                <div className="border-[1px] flex-1/3">
+                <div className={`border-[1px] flex-1/2`}>
                     <div className="bg-gray-400 px-10 py-5 mb-5 font-bold">
                         <h1>/ Create a New Data Pipeline</h1>
                     </div>
                     <div className="px-10">
-                        <ul
-                            className={`flex space-x-4 border-b mb-5 ${spaceGrotesk.className}`}
-                        >
+                        <ul className={`flex space-x-4 border-b mb-5`}>
                             {Forms.map((form) => (
                                 <li
                                     key={form}
@@ -205,6 +216,11 @@ export default function NewDataPipeline() {
                                         dispatch(resetTransformationForm());
 
                                         dispatch(resetMonitoringForm());
+
+                                        dispatch(resetURLVerification());
+                                        dispatch(resetFieldNames());
+                                        dispatch(resetSelectedFields());
+                                        setFilterPreview(false);
                                     }}
                                 >
                                     {form}
@@ -219,29 +235,6 @@ export default function NewDataPipeline() {
                         {activeForm === "Enrichment" && <EnrichmentForm />}
                         {activeForm === "Monitoring" && <MonitoringForm />}
 
-                        {/* 
-                            <div>
-                            <h3>Current Form State:</h3>
-                            <div>
-                            <h4>Ingestion:</h4>
-                            <pre>{JSON.stringify(ingestionFormState, null, 2)}</pre>
-                            </div>
-                            <div>
-                            <h4>Transformation:</h4>
-                            <pre>
-                            {JSON.stringify(transformationFormState, null, 2)}
-                            </pre>
-                            </div>
-                            <div>
-                            <h4>Enrichment:</h4>
-                            <pre>{JSON.stringify(enrichmentFormState, null, 2)}</pre>
-                            </div>
-                            <div>
-                            <h4>Monitoring:</h4>
-                            <pre>{JSON.stringify(monitoringFormState, null, 2)}</pre>
-                            </div>
-                            </div> 
-                        */}
                         <div className="flex justify-between my-10">
                             <div className="flex gap-2 items-center">
                                 <button
@@ -254,25 +247,35 @@ export default function NewDataPipeline() {
                                     Check Pipeline
                                 </button>
                                 <div
-                                    className={`url-verification-box w-5 h-5 border-[1px]`}
+                                    className={`url-verification-box w-5 h-5 ${urlVerificationStatus.isValid !== 2 ? "border-[1px]" : ""}`}
                                 >
-                                    {urlVerificationStatus.isValid !== 0 && (
+                                    {urlVerificationStatus.isValid !== 0 &&
+                                        urlVerificationStatus.isValid !== 2 && (
+                                            <Image
+                                                src={
+                                                    urlVerificationStatus.isValid ===
+                                                    1
+                                                        ? Ok
+                                                        : NotOk
+                                                }
+                                                alt=""
+                                                width={20}
+                                                height={20}
+                                            />
+                                        )}
+                                    {urlVerificationStatus.isValid === 2 && (
                                         <Image
-                                            src={
-                                                urlVerificationStatus.isValid ===
-                                                1
-                                                    ? Ok
-                                                    : NotOk
-                                            }
-                                            alt=""
-                                            width={20}
-                                            height={20}
+                                            src={Loading}
+                                            alt="Loading..."
+                                            width={40}
+                                            height={40}
                                         />
                                     )}
                                 </div>
                                 <div
                                     className={`${
-                                        urlVerificationStatus.isValid === 1
+                                        urlVerificationStatus.isValid === 1 ||
+                                        urlVerificationStatus.isValid === 2
                                             ? "text-green-700"
                                             : "text-red-500"
                                     } font-bold`}
@@ -299,16 +302,24 @@ export default function NewDataPipeline() {
                                     }
                                     onClick={() => handleSubmit(activeForm)}
                                 >
-                                    Next
+                                    Next [ 1 / 3 ]
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="Preview-Container flex flex-1/3 border-b-[1px] border-r-[1px] border-t-[1px] py-5 px-7 flex-col">
-                    <h2 className="font-bold mb-5">Filter Fieldnames</h2>
-                    <div className="flex gap-5">
-                        <div className="">
+                <div
+                    className={`Preview-Container flex flex-1/2 border-b-[1px] border-r-[1px] border-t-[1px] py-5 px-7 flex-col justify-start gap-3`}
+                >
+                    <h2 className="font-bold mb-5 border-b-[1px] pb-5 border-gray-600">
+                        / Filter Fieldnames
+                    </h2>
+                    <div className="flex gap-5 justify-center items-center">
+                        <div
+                            className={`${
+                                filterPreview ? "" : "hidden"
+                            } flex-1/2`}
+                        >
                             <h3 className="font-semibold mb-3">Field Names:</h3>
                             <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
                                 {(Array.isArray(OriginalFieldNames)
@@ -329,15 +340,27 @@ export default function NewDataPipeline() {
                                 ))}
                             </ul>
                         </div>
-                        <div>
-                            
+                        <div
+                            className={`${
+                                filterPreview ? "" : "hidden"
+                            } flex flex-col gap-3`}
+                        >
+                            <Image src={Arrow} alt="" width={20} height={20} />
+                            <Image src={Arrow} alt="" width={20} height={20} />
+                            <Image src={Arrow} alt="" width={20} height={20} />
                         </div>
-                        <div className="">
+                        <div
+                            className={`${
+                                filterPreview ? "" : "hidden"
+                            } flex-1/2`}
+                        >
                             <h3 className="font-bold mb-3">
                                 Selected Field Names:
                             </h3>
                             <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
-                                {(Array.isArray(ingestionFormState.selectedFields)
+                                {(Array.isArray(
+                                    ingestionFormState.selectedFields
+                                )
                                     ? ingestionFormState.selectedFields
                                     : []
                                 ).map((field: string, index: number) => (
@@ -346,6 +369,43 @@ export default function NewDataPipeline() {
                                     </li>
                                 ))}
                             </ul>
+                        </div>
+                    </div>
+                    <div className={`mt-2 ${filterPreview ? "" : "hidden"}`}>
+                        <div className="flex gap-2 items-center justify-start">
+                            <button
+                                type="submit"
+                                className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer ${
+                                    urlVerificationStatus.isValid === 1 &&
+                                    ingestionFormState.selectedFields
+                                        ?.length !== 0
+                                        ? "hover:bg-green-900"
+                                        : "opacity-50 cursor-not-allowed"
+                                }`}
+                                disabled={
+                                    urlVerificationStatus.isValid === 1 &&
+                                    ingestionFormState.selectedFields
+                                        ?.length !== 0
+                                        ? false
+                                        : true
+                                }
+                                onClick={() => handleStepTwo() } // temporary setting please remove later
+                            >
+                                Next [ 2 / 3 ]
+                            </button>
+                            <div
+                                className={`flex ${stepTwoLoading ? "" : "hidden"
+                                    }`}
+                            >
+                                <Image
+                                    src={Loading}
+                                    alt="Loading..."
+                                    width={20}
+                                    height={20}
+                                />
+
+                                <h1>{stepTwoLoading ? "Proceeding..." : ""}</h1>
+                            </div>
                         </div>
                     </div>
                 </div>
