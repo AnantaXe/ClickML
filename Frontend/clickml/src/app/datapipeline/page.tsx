@@ -5,16 +5,12 @@ import SavedDataPipelines from "./saved";
 import NewDataPipeline from "./new";
 // import { useAppDispatch, useAppSelector } from "@/redux/hooks/hooks";
 
-
 export default function DataPipeline() {
-
-
     // ----------- Options List Sidebar -----------//
 
-
     const SidebarOptions = [
-        { name: "New Pipeline", href: ""},
-        { name: "Saved Pipeline", href: ""},
+        { name: "New Pipeline", href: "" },
+        { name: "Saved Pipeline", href: "" },
     ];
 
     const [activeSection, setActiveSection] = useState(SidebarOptions[0].name);
@@ -108,32 +104,32 @@ export default function DataPipeline() {
     return (
         <>
             <Navbar />
-            <div className="flex flex-col md:flex-row min-h-screen">
-            {/* Sidebar */}
-            <div className="sidebar w-full md:w-1/6 bg-gray-200 p-4">
-                <ul className="flex md:flex-col flex-row">
-                {SidebarOptions.map((option) => (
-                    <li
-                    key={option.name}
-                    onClick={() => handleSidebarClick(option.name)}
-                    className={`p-4 hover:font-bold cursor-pointer ${
-                        activeSection === option.name
-                        ? "font-bold border-gray-700 md:border-l-4 md:px-3 border-b-4 md:border-b-0"
-                        : ""
-                    }`}
-                    >
-                    <span>{option.name}</span>
-                    </li>
-                ))}
-                </ul>
-            </div>
-            {/* Main Content */}
-            <div className="main-content flex-1 p-4">
-                {activeSection === "New Pipeline" && <NewDataPipeline />}
-                {activeSection === "Saved Pipeline" && (
-                <SavedDataPipelines />
-                )}
-            </div>
+            <div className="flex flex-col md:flex-row">
+                {/* Sidebar */}
+                <div className="sidebar md:w-1/6 bg-gray-200 p-4">
+                    <ul className="flex md:flex-col flex-row">
+                        {SidebarOptions.map((option) => (
+                            <li
+                                key={option.name}
+                                onClick={() => handleSidebarClick(option.name)}
+                                className={`p-4 hover:font-bold cursor-pointer ${
+                                    activeSection === option.name
+                                        ? "font-bold border-gray-700 md:border-l-4 md:px-3 border-b-4 md:border-b-0"
+                                        : ""
+                                }`}
+                            >
+                                <span>{option.name}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                {/* Main Content */}
+                <div className="main-content flex-1 p-4">
+                    {activeSection === "New Pipeline" && <NewDataPipeline />}
+                    {activeSection === "Saved Pipeline" && (
+                        <SavedDataPipelines />
+                    )}
+                </div>
             </div>
         </>
     );
