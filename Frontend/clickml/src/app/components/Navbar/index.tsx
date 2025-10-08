@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-      <nav className="bg-gray-800 flex items-center">
+      <nav className="bg-gray-800 flex items-center w-screen">
           <div className="px-32 text-white">
               <h1>ClickML</h1>
           </div>

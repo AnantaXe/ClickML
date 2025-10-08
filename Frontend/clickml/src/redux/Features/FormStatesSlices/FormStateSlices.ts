@@ -1,6 +1,33 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // import type { RootState } from "../../store";
 
+//----------------- Deployment States -------------------//
+
+interface DeploymentState {
+    isDeployed: number;
+    deploymentMessage: string;
+}
+
+const initialDeploymentState: DeploymentState = {
+    isDeployed: 0, // 1 = deployed, 0 = not checked, -1 = failed, 2 = deploying
+    deploymentMessage: "",
+};
+
+//----------------- Destination States -------------------//
+
+interface DestinationState {
+    // isActive: boolean;
+    destinationType: string;
+    destinationConfig: Record<string, unknown>
+}
+
+
+const initialDestinationState: DestinationState = {
+    // isActive: false,
+    destinationType: "",
+    destinationConfig: {} as Record<string, unknown>,
+};
+
 
 //----------------- Ingestion Form State and Initial State -----------------//
 
@@ -11,6 +38,8 @@ interface IngestionFormState {
     sourceConfig: Record<string, unknown>;
     selectedFields?: string[];
     formType: string;
+    // DestinationType?: string;
+    // DestinationConfig?: Record<string, unknown>;
 }
 
 const initialIngestionFormState: IngestionFormState = {
@@ -19,6 +48,8 @@ const initialIngestionFormState: IngestionFormState = {
     sourceType: "",
     sourceConfig: {} as Record<string, unknown>,
     formType: "Ingestion",
+    // Destination: initialDestinationState
+
 };
 
 //-------------- Enrichment Form State and Initial State -----------------//
@@ -96,7 +127,42 @@ const initialURLVerificationState: URLVerification = {
 };
 
 
+//----------------- Destination state -----------------//
+
+interface DestinationConnectionStatus {
+    isConnected: number; // 1 = connected, 0 = not checked, -1 = failed
+    connectionMessage: string;
+}
+
+const initialDestinationConnectionStatus: DestinationConnectionStatus = {
+    isConnected: 0,
+    connectionMessage: "",
+};
+
+
 //----------------- Redux Slices -----------------//
+
+export const deployedmentSlice = createSlice({
+    name: "deployment",
+    initialState: initialDeploymentState,
+    reducers: {
+        updateDeploymentStatus: (state, action: PayloadAction<Partial<DeploymentState>>) => {
+            return { ...state, ...action.payload };
+        },
+        resetDeploymentStatus: () => initialDeploymentState,
+    },
+});
+
+export const destinationConnectionSlice = createSlice({
+    name: "destinationConnection",
+    initialState: initialDestinationConnectionStatus,
+    reducers: {
+        updateConnectionStatus: (state, action: PayloadAction<Partial<DestinationConnectionStatus>>) => {
+            return { ...state, ...action.payload };
+        },
+        resetConnectionStatus: () => initialDestinationConnectionStatus,
+    },
+});
 
 export const urlVerificationSlice = createSlice({
     name: "urlVerification",
@@ -174,6 +240,25 @@ export const monitoringSlice = createSlice({
     },
 });
 
+export const destinationSlice = createSlice({
+    name: "destination",
+    initialState: initialDestinationState,
+    reducers: {
+        updateDestination: (
+            state,
+            action: PayloadAction<Partial<DestinationState>>
+        ) => {
+            return { ...state, ...action.payload };
+        },
+        resetDestination: () => initialDestinationState,
+        resetDestinationConfig: (state) => {
+            state.destinationConfig = {};
+        }
+    },
+});
+
+
+export const { updateDeploymentStatus, resetDeploymentStatus } = deployedmentSlice.actions;
 export const { updateIngestionForm, resetIngestionForm, resetSourceConfig, resetSelectedFields } = ingestionSlice.actions;
 export const { updateTransformationForm, resetTransformationForm } =
     transformationSlice.actions;
@@ -183,9 +268,15 @@ export const { updateMonitoringForm, resetMonitoringForm } =
     monitoringSlice.actions;
 
 export const { updateURLVerification, resetURLVerification } = urlVerificationSlice.actions;
+export const { updateDestination, resetDestination, resetDestinationConfig } = destinationSlice.actions;
+export const { updateConnectionStatus, resetConnectionStatus } = destinationConnectionSlice.actions;
 
+
+export const destinationConnectionReducer = destinationConnectionSlice.reducer;
 export const urlVerificationReducer = urlVerificationSlice.reducer;
 export const enrichmentReducer = enrichmentSlice.reducer;
 export const ingestionReducer = ingestionSlice.reducer;
 export const transformationReducer = transformationSlice.reducer;
 export const monitoringReducer = monitoringSlice.reducer;
+export const destinationReducer = destinationSlice.reducer;
+export const deploymentReducer = deployedmentSlice.reducer;

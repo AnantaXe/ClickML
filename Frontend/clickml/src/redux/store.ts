@@ -5,6 +5,9 @@ import {
     ingestionReducer,
     transformationReducer,
     monitoringReducer,
+    destinationReducer,
+    destinationConnectionReducer,
+    deploymentReducer,
 } from "./Features/FormStatesSlices/FormStateSlices";
 import { fieldNamesReducer } from "./Features/FieldNameSlices/FieldNameSlices";
 
@@ -15,7 +18,10 @@ export const store = configureStore({
         enrichment: enrichmentReducer,
         monitoring: monitoringReducer,
         urlVerification: urlVerificationReducer,
-        fieldnames: fieldNamesReducer
+        fieldnames: fieldNamesReducer,
+        destination: destinationReducer,
+        destinationConnection: destinationConnectionReducer,
+        deployment: deploymentReducer,
     },
 });
 
