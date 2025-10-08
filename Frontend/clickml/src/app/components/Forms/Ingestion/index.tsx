@@ -7,14 +7,8 @@ import {
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 
 export default function IngestionForm() {
-
     const ingestionFormState = useAppSelector((state) => state.ingestion);
     const dispatch = useAppDispatch();
-    type IngestionFormState = typeof ingestionFormState;
-    const setIngestionInitialState = (newState: IngestionFormState) => {
-        // This function should dispatch an action to update the Redux state
-        dispatch(updateIngestionForm(newState));
-    };
 
     return (
         <>
@@ -24,20 +18,24 @@ export default function IngestionForm() {
                     placeholder="Pipeline Name"
                     value={ingestionFormState.pipelineName}
                     onChange={(e) => {
-                        setIngestionInitialState({
-                            ...ingestionFormState,
-                            pipelineName: e.target.value,
-                        });
+                        dispatch(
+                            updateIngestionForm({
+                                ...ingestionFormState,
+                                pipelineName: e.target.value,
+                            })
+                        );
                     }}
                     className="border p-2 rounded"
                 />
                 <select
                     value={ingestionFormState.sourceType}
                     onChange={(e) => {
-                        setIngestionInitialState({
-                            ...ingestionFormState,
-                            sourceType: e.target.value,
-                        });
+                        dispatch(
+                            updateIngestionForm({
+                                ...ingestionFormState,
+                                sourceType: e.target.value,
+                            })
+                        );
                         dispatch(resetSourceConfig());
                         dispatch(resetURLVerification());
                     }}
@@ -48,6 +46,8 @@ export default function IngestionForm() {
                     <option value="api">API</option>
                     <option value="s3">Amazon S3</option>
                 </select>
+                
+                {/* Ingestion == postgres */}
 
                 {ingestionFormState.sourceType === "postgres" && (
                     <div className="flex flex-col space-y-2 border p-3 rounded">
@@ -72,13 +72,15 @@ export default function IngestionForm() {
                                 ).setCustomValidity("")
                             }
                             onChange={(e) => {
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        host: e.target.value,
-                                    },
-                                });
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            host: e.target.value,
+                                        },
+                                    })
+                                );
                                 dispatch(resetURLVerification());
                             }}
                             className="border p-2 rounded"
@@ -86,13 +88,15 @@ export default function IngestionForm() {
                         <input
                             placeholder="Database"
                             onChange={(e) => {
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        database: e.target.value,
-                                    },
-                                });
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            database: e.target.value,
+                                        },
+                                    })
+                                );
                                 dispatch(resetURLVerification());
                             }}
                             className="border p-2 rounded"
@@ -101,26 +105,30 @@ export default function IngestionForm() {
                             type="text"
                             placeholder="Table Name"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        tableName: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            tableName: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
                         <input
                             placeholder="User"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        user: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            user: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
@@ -128,18 +136,22 @@ export default function IngestionForm() {
                             type="password"
                             placeholder="Password"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        password: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            password: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
                     </div>
                 )}
+
+                {/* Ingestion == API */}
 
                 {ingestionFormState.sourceType === "api" && (
                     <div className="flex flex-col space-y-2 border p-3 rounded">
@@ -148,14 +160,16 @@ export default function IngestionForm() {
                             pattern="https?://.+"
                             required={true}
                             placeholder="API URL"
-                            onChange={(e) =>{
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        apiUrl: e.target.value,
-                                    },
-                                })
+                            onChange={(e) => {
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            apiUrl: e.target.value,
+                                        },
+                                    })
+                                );
                                 dispatch(resetURLVerification());
                             }}
                             className="border p-2 rounded"
@@ -164,13 +178,15 @@ export default function IngestionForm() {
                             type="text"
                             placeholder="API Key"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        apiKey: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            apiKey: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
@@ -183,13 +199,15 @@ export default function IngestionForm() {
                             type="text"
                             placeholder="Bucket Name"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        bucketName: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            bucketName: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
@@ -197,13 +215,15 @@ export default function IngestionForm() {
                             type="text"
                             placeholder="AWS Access Key"
                             onChange={(e) =>
-                                setIngestionInitialState({
-                                    ...ingestionFormState,
-                                    sourceConfig: {
-                                        ...ingestionFormState.sourceConfig,
-                                        awsAccessKey: e.target.value,
-                                    },
-                                })
+                                dispatch(
+                                    updateIngestionForm({
+                                        ...ingestionFormState,
+                                        sourceConfig: {
+                                            ...ingestionFormState.sourceConfig,
+                                            awsAccessKey: e.target.value,
+                                        },
+                                    })
+                                )
                             }
                             className="border p-2 rounded"
                         />
@@ -231,10 +251,12 @@ export default function IngestionForm() {
                     placeholder="Cron (e.g. 0 * * * *)"
                     value={ingestionFormState.cron}
                     onChange={(e) =>
-                        setIngestionInitialState({
-                            ...ingestionFormState,
-                            cron: e.target.value,
-                        })
+                        dispatch(
+                            updateIngestionForm({
+                                ...ingestionFormState,
+                                cron: e.target.value,
+                            })
+                        )
                     }
                     className="border p-2 rounded"
                 />

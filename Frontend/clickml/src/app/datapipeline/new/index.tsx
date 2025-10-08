@@ -11,6 +11,7 @@ import {
     EnrichmentForm,
     MonitoringForm,
     TransformationForm,
+    TargetForm,
 } from "@/app/components/Forms";
 import {
     resetEnrichmentForm,
@@ -57,9 +58,30 @@ export default function NewDataPipeline() {
     );
 
     //----------- Step Two Handler -----------//
-    const [stepTwoLoading, setStepTwoLoading] = useState(false);
-    const handleStepTwo = () => {
-        setStepTwoLoading(true); // temporary Setting please remove later
+    // const [stepThreeLoading, setStepThreeLoading] = useState(false);
+    const [filtering, setFiltering] = useState(false);
+    const [stepThreeLoaded, setStepThreeLoaded] = useState(false);
+    const [filterMessage, setFilterMessage] = useState("");
+    // const handleStepTwo = () => {
+    //     setStepTwoLoading(true); // temporary Setting please remove later
+    // }
+
+    function handleFilterationAndLoadDestinationForm() {
+        setFiltering(true);
+        setFilterMessage("Filtering...");
+        if (
+            !(
+                urlVerificationStatus.isValid === 1 &&
+                ingestionFormState.selectedFields?.length !== 0
+            )
+        ) {
+            setFilterMessage("Unable to proceed, Please check above !");
+            return;
+        }
+        // setStepThreeLoading(true); // temporary Setting please remove later
+        setFilterMessage("Filtered Successfully !");
+        setFiltering(false);
+        setStepThreeLoaded(true);
     }
 
     // const dispatch = useAppDispatch(resetEnrichmentForm());
@@ -139,9 +161,11 @@ export default function NewDataPipeline() {
 
     //----------- handle form Submission -----------//
     const handleSubmit = (activeForm: string) => {
+        setFilterMessage("");
+        setStepThreeLoaded(false);
         dispatch(resetFieldNames());
         dispatch(resetSelectedFields());
-        setStepTwoLoading(false); // temporary Setting please remove later
+        // setStepThreeLoading(false); // temporary Setting please remove later
 
         if (activeForm === "Ingestion") {
             const response = fetch("http://localhost:3002/etl/api/apipreview", {
@@ -191,224 +215,263 @@ export default function NewDataPipeline() {
 
     return (
         <>
-            <div className="flex">
-                <div className={`border-[1px] flex-1/2`}>
-                    <div className="bg-gray-400 px-10 py-5 mb-5 font-bold">
-                        <h1>/ Create a New Data Pipeline</h1>
-                    </div>
-                    <div className="px-10">
-                        <ul className={`flex space-x-4 border-b mb-5`}>
-                            {Forms.map((form) => (
-                                <li
-                                    key={form}
-                                    className={`cursor-pointer py-2 hover:font-semibold ${
-                                        activeForm === form
-                                            ? "bg-gray-700 font-semibold text-white"
-                                            : ""
-                                    } p-2`}
-                                    onClick={() => {
-                                        setActiveForm(form);
-                                        // Reset form state
-                                        dispatch(resetEnrichmentForm());
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <div className={`border-[1px] flex-1/2`}>
+                        <div className="bg-gray-400 px-10 py-5 mb-5 font-bold">
+                            <h1>/ Create a New Data Pipeline</h1>
+                        </div>
+                        <div className="px-10">
+                            <ul className={`flex space-x-4 border-b mb-5`}>
+                                {Forms.map((form) => (
+                                    <li
+                                        key={form}
+                                        className={`cursor-pointer py-2 hover:font-semibold ${
+                                            activeForm === form
+                                                ? "bg-gray-700 font-semibold text-white"
+                                                : ""
+                                        } p-2`}
+                                        onClick={() => {
+                                            setActiveForm(form);
+                                            // Reset form state
+                                            dispatch(resetEnrichmentForm());
 
-                                        dispatch(resetIngestionForm());
+                                            dispatch(resetIngestionForm());
 
-                                        dispatch(resetTransformationForm());
+                                            dispatch(resetTransformationForm());
 
-                                        dispatch(resetMonitoringForm());
+                                            dispatch(resetMonitoringForm());
 
-                                        dispatch(resetURLVerification());
-                                        dispatch(resetFieldNames());
-                                        dispatch(resetSelectedFields());
-                                        setFilterPreview(false);
-                                    }}
-                                >
-                                    {form}
-                                </li>
-                            ))}
-                        </ul>
+                                            dispatch(resetURLVerification());
+                                            dispatch(resetFieldNames());
+                                            dispatch(resetSelectedFields());
+                                            setFilterPreview(false);
+                                        }}
+                                    >
+                                        {form}
+                                    </li>
+                                ))}
+                            </ul>
 
-                        {activeForm === "Ingestion" && <IngestionForm />}
-                        {activeForm === "Transformation" && (
-                            <TransformationForm />
-                        )}
-                        {activeForm === "Enrichment" && <EnrichmentForm />}
-                        {activeForm === "Monitoring" && <MonitoringForm />}
+                            {activeForm === "Ingestion" && <IngestionForm />}
+                            {activeForm === "Transformation" && (
+                                <TransformationForm />
+                            )}
+                            {activeForm === "Enrichment" && <EnrichmentForm />}
+                            {activeForm === "Monitoring" && <MonitoringForm />}
 
-                        <div className="flex justify-between my-10">
-                            <div className="flex gap-2 items-center">
-                                <button
-                                    type="submit"
-                                    className="bg-gray-700 text-white p-3 rounded cursor-pointer hover:bg-gray-800"
-                                    onClick={(e) =>
-                                        handleValidation(activeForm, e)
-                                    }
-                                >
-                                    Check Pipeline
-                                </button>
-                                <div
-                                    className={`url-verification-box w-5 h-5 ${urlVerificationStatus.isValid !== 2 ? "border-[1px]" : ""}`}
-                                >
-                                    {urlVerificationStatus.isValid !== 0 &&
-                                        urlVerificationStatus.isValid !== 2 && (
+                            <div className="flex justify-between my-10">
+                                <div className="flex gap-2 items-center">
+                                    <button
+                                        type="submit"
+                                        className="bg-gray-700 text-white p-3 px-4 rounded cursor-pointer hover:bg-gray-800"
+                                        onClick={(e) =>
+                                            handleValidation(activeForm, e)
+                                        }
+                                    >
+                                        Validate API
+                                    </button>
+                                    <div
+                                        className={`url-verification-box w-5 h-5 ${
+                                            urlVerificationStatus.isValid !== 2
+                                                ? "border-[1px]"
+                                                : ""
+                                        }`}
+                                    >
+                                        {urlVerificationStatus.isValid !== 0 &&
+                                            urlVerificationStatus.isValid !==
+                                                2 && (
+                                                <Image
+                                                    src={
+                                                        urlVerificationStatus.isValid ===
+                                                        1
+                                                            ? Ok
+                                                            : NotOk
+                                                    }
+                                                    alt=""
+                                                    width={20}
+                                                    height={20}
+                                                />
+                                            )}
+                                        {urlVerificationStatus.isValid ===
+                                            2 && (
                                             <Image
-                                                src={
-                                                    urlVerificationStatus.isValid ===
-                                                    1
-                                                        ? Ok
-                                                        : NotOk
-                                                }
-                                                alt=""
-                                                width={20}
-                                                height={20}
+                                                src={Loading}
+                                                alt="Loading..."
+                                                width={40}
+                                                height={40}
                                             />
                                         )}
-                                    {urlVerificationStatus.isValid === 2 && (
-                                        <Image
-                                            src={Loading}
-                                            alt="Loading..."
-                                            width={40}
-                                            height={40}
-                                        />
-                                    )}
+                                    </div>
+                                    <div
+                                        className={`${
+                                            urlVerificationStatus.isValid ===
+                                                1 ||
+                                            urlVerificationStatus.isValid === 2
+                                                ? "text-green-700"
+                                                : "text-red-500"
+                                        } font-bold`}
+                                    >
+                                        <h2>
+                                            {
+                                                urlVerificationStatus.urlVerificationMessage
+                                            }
+                                        </h2>
+                                    </div>
                                 </div>
-                                <div
-                                    className={`${
-                                        urlVerificationStatus.isValid === 1 ||
-                                        urlVerificationStatus.isValid === 2
-                                            ? "text-green-700"
-                                            : "text-red-500"
-                                    } font-bold`}
-                                >
-                                    <h2>
-                                        {
-                                            urlVerificationStatus.urlVerificationMessage
+                                <div>
+                                    <button
+                                        type="submit"
+                                        className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer  ${
+                                            urlVerificationStatus.isValid === 1
+                                                ? "hover:bg-green-900"
+                                                : "opacity-50 cursor-not-allowed"
+                                        }`}
+                                        disabled={
+                                            urlVerificationStatus.isValid === 1
+                                                ? false
+                                                : true
                                         }
-                                    </h2>
+                                        onClick={() => handleSubmit(activeForm)}
+                                    >
+                                        Fetch Feautures
+                                    </button>
                                 </div>
                             </div>
-                            <div>
+                        </div>
+                    </div>
+                    <div
+                        className={`Preview-Container flex flex-1/2 border-[1px] flex-col justify-start gap-3`}
+                    >
+                        <div className="bg-gray-400 px-10 py-5 mb-5 font-bold">
+                            <h1>/ Filter Fieldnames</h1>
+                        </div>
+                        <div className="flex gap-5 justify-center items-center py-5 px-7">
+                            <div
+                                className={`${
+                                    filterPreview ? "" : "hidden"
+                                } flex-1/2`}
+                            >
+                                <h3 className="font-semibold mb-3">
+                                    Field Names:
+                                </h3>
+                                <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
+                                    {(Array.isArray(OriginalFieldNames)
+                                        ? OriginalFieldNames
+                                        : []
+                                    ).map((field: string, index: number) => (
+                                        <li key={index}>
+                                            <input
+                                                className="mr-2"
+                                                type="checkbox"
+                                                value={field}
+                                                onChange={(e) =>
+                                                    handleFieldNameChange(
+                                                        e,
+                                                        field
+                                                    )
+                                                }
+                                            />
+                                            <span>{field}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div
+                                className={`${
+                                    filterPreview ? "" : "hidden"
+                                } flex flex-col gap-3`}
+                            >
+                                <Image
+                                    src={Arrow}
+                                    alt=""
+                                    width={20}
+                                    height={20}
+                                />
+                                <Image
+                                    src={Arrow}
+                                    alt=""
+                                    width={20}
+                                    height={20}
+                                />
+                                <Image
+                                    src={Arrow}
+                                    alt=""
+                                    width={20}
+                                    height={20}
+                                />
+                            </div>
+                            <div
+                                className={`${
+                                    filterPreview ? "" : "hidden"
+                                } flex-1/2`}
+                            >
+                                <h3 className="font-bold mb-3">
+                                    Selected Field Names:
+                                </h3>
+                                <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
+                                    {(Array.isArray(
+                                        ingestionFormState.selectedFields
+                                    )
+                                        ? ingestionFormState.selectedFields
+                                        : []
+                                    ).map((field: string, index: number) => (
+                                        <li key={index}>
+                                            <span>{field}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                        <div
+                            className={`pb-5 px-7 ${
+                                filterPreview ? "" : "hidden"
+                            }`}
+                        >
+                            <div className="flex gap-2 items-center justify-start">
                                 <button
                                     type="submit"
-                                    className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer  ${
-                                        urlVerificationStatus.isValid === 1
+                                    className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer ${
+                                        urlVerificationStatus.isValid === 1 &&
+                                        ingestionFormState.selectedFields
+                                            ?.length !== 0
                                             ? "hover:bg-green-900"
                                             : "opacity-50 cursor-not-allowed"
                                     }`}
                                     disabled={
-                                        urlVerificationStatus.isValid === 1
+                                        urlVerificationStatus.isValid === 1 &&
+                                        ingestionFormState.selectedFields
+                                            ?.length !== 0
                                             ? false
                                             : true
                                     }
-                                    onClick={() => handleSubmit(activeForm)}
+                                    onClick={() =>
+                                        handleFilterationAndLoadDestinationForm()
+                                    } // temporary setting please remove later
                                 >
-                                    Next [ 1 / 3 ]
+                                    Filter Fields
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    className={`Preview-Container flex flex-1/2 border-b-[1px] border-r-[1px] border-t-[1px] py-5 px-7 flex-col justify-start gap-3`}
-                >
-                    <h2 className="font-bold mb-5 border-b-[1px] pb-5 border-gray-600">
-                        / Filter Fieldnames
-                    </h2>
-                    <div className="flex gap-5 justify-center items-center">
-                        <div
-                            className={`${
-                                filterPreview ? "" : "hidden"
-                            } flex-1/2`}
-                        >
-                            <h3 className="font-semibold mb-3">Field Names:</h3>
-                            <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
-                                {(Array.isArray(OriginalFieldNames)
-                                    ? OriginalFieldNames
-                                    : []
-                                ).map((field: string, index: number) => (
-                                    <li key={index}>
-                                        <input
-                                            className="mr-2"
-                                            type="checkbox"
-                                            value={field}
-                                            onChange={(e) =>
-                                                handleFieldNameChange(e, field)
-                                            }
+                                <div className="flex">
+                                    <div
+                                        className={`${
+                                            filtering ? "" : "hidden"
+                                        }`}
+                                    >
+                                        <Image
+                                            src={Loading}
+                                            alt="Loading..."
+                                            width={20}
+                                            height={20}
+                                            unoptimized={true}
                                         />
-                                        <span>{field}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div
-                            className={`${
-                                filterPreview ? "" : "hidden"
-                            } flex flex-col gap-3`}
-                        >
-                            <Image src={Arrow} alt="" width={20} height={20} />
-                            <Image src={Arrow} alt="" width={20} height={20} />
-                            <Image src={Arrow} alt="" width={20} height={20} />
-                        </div>
-                        <div
-                            className={`${
-                                filterPreview ? "" : "hidden"
-                            } flex-1/2`}
-                        >
-                            <h3 className="font-bold mb-3">
-                                Selected Field Names:
-                            </h3>
-                            <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
-                                {(Array.isArray(
-                                    ingestionFormState.selectedFields
-                                )
-                                    ? ingestionFormState.selectedFields
-                                    : []
-                                ).map((field: string, index: number) => (
-                                    <li key={index}>
-                                        <span>{field}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                    <div className={`mt-2 ${filterPreview ? "" : "hidden"}`}>
-                        <div className="flex gap-2 items-center justify-start">
-                            <button
-                                type="submit"
-                                className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer ${
-                                    urlVerificationStatus.isValid === 1 &&
-                                    ingestionFormState.selectedFields
-                                        ?.length !== 0
-                                        ? "hover:bg-green-900"
-                                        : "opacity-50 cursor-not-allowed"
-                                }`}
-                                disabled={
-                                    urlVerificationStatus.isValid === 1 &&
-                                    ingestionFormState.selectedFields
-                                        ?.length !== 0
-                                        ? false
-                                        : true
-                                }
-                                onClick={() => handleStepTwo() } // temporary setting please remove later
-                            >
-                                Next [ 2 / 3 ]
-                            </button>
-                            <div
-                                className={`flex ${stepTwoLoading ? "" : "hidden"
-                                    }`}
-                            >
-                                <Image
-                                    src={Loading}
-                                    alt="Loading..."
-                                    width={20}
-                                    height={20}
-                                />
-
-                                <h1>{stepTwoLoading ? "Proceeding..." : ""}</h1>
+                                    </div>
+                                    <h1 className={`text-green-700`}>{filterMessage}</h1>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div>{stepThreeLoaded && <TargetForm />}</div>
             </div>
         </>
     );
