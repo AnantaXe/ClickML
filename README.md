@@ -1,6 +1,6 @@
 # ClickML - build MLOps workflow (just click, save and use)
 
-### ClickML is a low-code/no-code platform that helps MLOps engineers and data teams to create end-to-end ML pipelines — from ETL to model training and deployment — all through a simple, click-based interface.
+#### ClickML is a low-code/no-code platform that helps MLOps engineers and data teams to create end-to-end ML pipelines — from ETL to model training and deployment — all through a simple, click-based interface.
 
 ## Architecture
 
