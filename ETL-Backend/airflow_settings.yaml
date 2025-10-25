@@ -1,0 +1,6 @@
+env:
+  AIRFLOW__CORE__DAGS_FOLDER: /usr/local/airflow/dags
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+  AIRFLOW__CORE__REMOTE_LOGGING: "True"
+  AIRFLOW__CORE__REMOTE_LOG_CONN_ID: clickml_s3_etl_dag_conn
+  AIRFLOW__CORE__DAGS_REPOSITORY: s3://clickml-etl-storage/clickml-etl-dags
