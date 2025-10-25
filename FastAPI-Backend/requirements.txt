@@ -1,0 +1,6 @@
+
+fastapi[standard]
+jinja2
+requests
+boto3
+dotenv
