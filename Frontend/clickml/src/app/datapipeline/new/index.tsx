@@ -300,6 +300,7 @@ export default function NewDataPipeline() {
                                                 alt="Loading..."
                                                 width={40}
                                                 height={40}
+                                                unoptimized={true}
                                             />
                                         )}
                                     </div>

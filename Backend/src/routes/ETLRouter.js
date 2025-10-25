@@ -7,7 +7,7 @@ const { fetchData, selectFeatures } = require("../controllers/featureSelection")
 const { validateData, validateAPI, APIPreview } = require("../controllers/validatation");
 const { controlIngestion } = require("../controllers/controlIngestion");
 const { testConnection } = require("../controllers/Connections");
-const { deployPipeline } = require("../controllers/deployments");
+const { deployIngestionPipeline } = require("../controllers/deployments");
 
 
 if (!fs.existsSync("./logs")) {
@@ -43,7 +43,7 @@ router.post("/etlpush", etlPush);
 router.post("/api/apipreview", APIPreview)
 router.post("/api/ingestion", controlIngestion);
 router.post("/api/testconnection", testConnection)
-router.post("/api/deploypipeline", deployPipeline);
+router.post("/api/deploypipeline", deployIngestionPipeline);
 
 // logger.info("Request receive/d for /fetchData");
 
