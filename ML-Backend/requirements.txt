@@ -4,4 +4,8 @@ pandas
 numpy
 scikit-learn
 pydantic
+boto3
+awscli
+reportlab
 dill
+ml-report-kit

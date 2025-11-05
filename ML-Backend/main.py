@@ -44,22 +44,21 @@ async def create_pipeline(request: Request):
     return {"status": "scheduled"}
 
 class Item(BaseModel):
-    data:str
-    input_features:list|None
-    target_features:str
-    model:str
-    model_params:dict
-    user_database:dict|None
+    user_name:str
+    DBsource:dict # Data source dict format
+    modelConfig:dict
+     
 
 @app.post("/model_training")
 async def create_item(item: Item):
-    data=item.data
-    input_features=item.input_features
-    target_feature=item.target_features
-    model=item.model
-    params=item.model_params
-    user_database=item.user_database #Database credentials
+    user_name=item.user_name
+    DBsource=item.DBsource
+    target_feature=item.DBsource.get("features",{}).get("targetf",{})
+    model_type=item.modelConfig.get("modelType")
+    params=item.modelConfig.get("modelparams")
+    model_name=item.modelConfig.get("modelName")
 
-    report,file_path=ModelTrainer.model_training_initiate(data,input_features,target_feature,model,params,user_database)
+    model_path_s3,report_path_s3=ModelTrainer.model_training_initiate(DBsource,target_feature,model_type,params,user_name,model_name)
     
-    return {"report": report, "file_path": file_path}
+    return model_path_s3,report_path_s3
+

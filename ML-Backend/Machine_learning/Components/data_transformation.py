@@ -54,7 +54,7 @@ class DataTransformation:
     def initiate_data_transformation(self,Data,target_feature):
 
             train_df,test_df=train_test_split(Data,test_size=0.2,random_state=42)
-            target_feature= "Result" #from configuration file
+            target_feature= "result" #from configuration file
 
             preprocessing_obj=self.get_data_transformer_object(Data,target_feature)
 
