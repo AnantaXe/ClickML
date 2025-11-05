@@ -6,41 +6,21 @@ from pydantic import BaseModel
 
 app=FastAPI()
 class Item(BaseModel):
-    data:str
-    input_features:list|None
-    target_features:str
-    model:str
-    model_params:dict
-    user_database:dict|None
+    user_name:str
+    DBsource:dict # Data source dict format
+    modelConfig:dict
+     
 
-@app.post("/model_training/")
+@app.post("/model_training")
 async def create_item(item: Item):
-    data=item.data
-    input_features=item.input_features
-    target_feature=item.target_features
-    model=item.model
-    params=item.model_params
-    user_database=item.user_database #Database credentials
+    user_name=item.user_name
+    DBsource=item.DBsource
+    target_feature=item.DBsource.get("features",{}).get("targetf",{})
+    model_type=item.modelConfig.get("modelType")
+    params=item.modelConfig.get("modelparams")
+    model_name=item.modelConfig.get("modelName")
 
-    report,file_path=ModelTrainer.model_training_initiate(data,input_features,target_feature,model,params,user_database)
+    model_path_s3,report_path_s3=ModelTrainer.model_training_initiate(DBsource,target_feature,model_type,params,user_name,model_name)
     
-    return report,file_path
-
-# def model_training_initiate(Data1,Target_feature,model,params):
-#     d1=Data1
-# Data=pd.read_csv(r"E:\projects\College_Project\phisingData.csv") # from configuration file
-# Target_feature="Results"
-# Data=Preprocess(Data)# returns preprocessed train and test dataset
-
-# DataTransformation=DataTransformation()
-# Trans_Train,Trans_Test=DataTransformation.initiate_data_transformation(Data,Target_feature) # returns transformed Data
-
-# model=RandomForestRegressor()
-# params= param_grid = {
-# 'n_estimators': [100, 200, 500]
-# }
-
-# ModelTrain=ModelTrainer()
-# Model_report,file_path=ModelTrain.initiate_model_trainer(Trans_Train,Trans_Test,model,params)
-# print(Model_report,file_path)
+    return model_path_s3,report_path_s3
 
