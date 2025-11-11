@@ -1,0 +1,88 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import pandas as pd
+import psycopg2
+import mysql.connector
+
+default_args = {
+    "owner": "airflow",
+    "start_date": datetime(2025, 1, 1),
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+def get_connection(db_type, config):
+    if db_type.lower() == "postgres":
+        return psycopg2.connect(
+            host=config["host"],
+            user=config["user"],
+            password=config["password"],
+            dbname=config["database"],
+            port=config.get("port", 5432)
+        )
+    elif db_type.lower() == "mysql":
+        return mysql.connector.connect(
+            host=config["host"],
+            user=config["user"],
+            password=config["password"],
+            database=config["database"],
+            port=config.get("port", 3306)
+        )
+    else:
+        raise ValueError(f"Unsupported DB type: {db_type}")
+
+def extract(**context):
+    src = {{ sourceConfig }}
+    conn = get_connection("{{ sourceType }}", src)
+    df = pd.read_sql("{{ sourceQuery }}", conn)
+    conn.close()
+    return df.to_dict(orient="records")
+
+def transform(**context):
+    data = context["ti"].xcom_pull(task_ids="extract")
+    df = pd.DataFrame(data)
+
+    {% if transform_featureList %}
+    df = df[{{ transform_featureList }}]
+    {% endif %}
+
+    {% if transform_cleaningRules %}
+    {% for rule in transform_cleaningRules %}
+    df = df.query("{{ rule }}")
+    {% endfor %}
+    {% endif %}
+
+    {% if transform_pythonFunction %}
+    exec("""{{ transform_pythonFunction }}""", globals())
+    df = custom_transform(df)
+    {% endif %}
+
+    return df.to_dict(orient="records")
+
+def load(**context):
+    dest = {{ destConfig }}
+    df = pd.DataFrame(context["ti"].xcom_pull(task_ids="transform"))
+    conn = get_connection("{{ destType }}", dest)
+    cursor = conn.cursor()
+
+    for _, row in df.iterrows():
+        placeholders = ','.join(['%s'] * len(row))
+        sql = f"INSERT INTO {{ destTable }} VALUES ({placeholders})"
+        cursor.execute(sql, tuple(row))
+    conn.commit()
+    conn.close()
+
+with DAG(
+    dag_id="{{ dag_id }}",
+    default_args=default_args,
+    schedule="{{ schedule }}",
+    description="{{ description }}",
+    catchup=False,
+    is_paused_upon_creation=False,
+) as dag:
+    t1 = PythonOperator(task_id="extract", python_callable=extract)
+    t2 = PythonOperator(task_id="transform", python_callable=transform)
+    t3 = PythonOperator(task_id="load", python_callable=load)
+
+    t1 >> t2 >> t3

@@ -22,6 +22,8 @@ import {
     updateURLVerification,
     resetSelectedFields,
     resetURLVerification,
+    updateTransformationConfig,
+    resetTransformationConfigState
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 import {
     updateFilteredFieldsName,
@@ -209,7 +211,8 @@ export default function NewDataPipeline() {
 
         dispatch(updateFilteredFieldsName(updatedFilteredFields));
         dispatch(
-            updateIngestionForm({ selectedFields: updatedFilteredFields })
+            // updateIngestionForm({ selectedFields: updatedFilteredFields })
+            updateTransformationConfig({ transformationLogic: { selectedFields: updatedFilteredFields } })
         );
     };
 

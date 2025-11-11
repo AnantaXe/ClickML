@@ -8,6 +8,9 @@ import {
     destinationReducer,
     destinationConnectionReducer,
     deploymentReducer,
+    alterIngestionFormReducer,
+    transformationConfigReducer,
+    sourceStateReducer
 } from "./Features/FormStatesSlices/FormStateSlices";
 import { fieldNamesReducer } from "./Features/FieldNameSlices/FieldNameSlices";
 
@@ -22,6 +25,9 @@ export const store = configureStore({
         destination: destinationReducer,
         destinationConnection: destinationConnectionReducer,
         deployment: deploymentReducer,
+        alterIngestion: alterIngestionFormReducer,
+        transformationConfig: transformationConfigReducer,
+        sourceState: sourceStateReducer,
     },
 });
 

@@ -1,0 +1,72 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from airflow.providers.http.hooks.http import HttpHook
+from datetime import datetime, timedelta
+import pandas as pd
+import psycopg2
+import mysql.connector
+import json
+
+default_args = {
+    "owner": "airflow",
+    "start_date": datetime(2025, 1, 1),
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+def extract(**context):
+    config = {{ sourceConfig }}
+    import requests
+    resp = requests.get(config["apiUrl"], headers=config.get("headers", {}))
+    if resp.status_code != 200:
+        raise Exception(f"API fetch failed: {resp.text}")
+    return resp.json()
+
+def transform(**context):
+    data = context["ti"].xcom_pull(task_ids="extract")
+    df = pd.DataFrame(data)
+
+    {% if selectedFields %}
+    df = df[{{ selectedFields }}]
+    {% endif %}
+
+    {% if cleaning_rules %}
+    {% for rule in cleaning_rules %}
+    df = df.query("{{ rule }}")
+    {% endfor %}
+    {% endif %}
+
+    return df.to_dict(orient="records")
+
+def load(**context):
+    dest = {{ destinationConfig }}
+    df = pd.DataFrame(context["ti"].xcom_pull(task_ids="transform"))
+    conn = psycopg2.connect(
+        host=dest["host"],
+        user=dest["user"],
+        password=dest["password"],
+        dbname=dest["database"],
+        port=dest.get("port", 5432)
+    )
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        cols = ','.join(row.keys())
+        vals = ','.join(['%s'] * len(row))
+        sql = f"INSERT INTO {{ destination_table }} ({cols}) VALUES ({vals})"
+        cursor.execute(sql, tuple(row.values()))
+    conn.commit()
+    conn.close()
+
+with DAG(
+    dag_id="{{ dag_id }}",
+    default_args=default_args,
+    schedule="{{ schedule }}",
+    description="{{ description }}",
+    catchup=False,
+    is_paused_upon_creation=False,
+) as dag:
+    t1 = PythonOperator(task_id="extract", python_callable=extract)
+    t2 = PythonOperator(task_id="transform", python_callable=transform)
+    t3 = PythonOperator(task_id="load", python_callable=load)
+
+    t1 >> t2 >> t3

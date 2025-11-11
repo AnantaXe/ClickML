@@ -1,0 +1,57 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+from kafka import KafkaConsumer
+import boto3
+import json
+
+default_args = {
+    "owner": "airflow",
+    "start_date": datetime(2025, 1, 1),
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+def extract(**context):
+    cfg = {{ sourceConfig }}
+    consumer = KafkaConsumer(
+        cfg["topic"],
+        bootstrap_servers=cfg["bootstrap_servers"],
+        group_id=cfg.get("group_id", "airflow-etl"),
+        auto_offset_reset="earliest",
+        enable_auto_commit=False
+    )
+    messages = []
+    for message in consumer:
+        messages.append(json.loads(message.value))
+        if len(messages) >= cfg.get("batch_size", 100):
+            break
+    consumer.close()
+    return messages
+
+def transform(**context):
+    data = context["ti"].xcom_pull(task_ids="extract")
+    {% if feature_list %}
+    data = [{k: v for k, v in record.items() if k in {{ feature_list }}} for record in data]
+    {% endif %}
+    return data
+
+def load(**context):
+    data = context["ti"].xcom_pull(task_ids="transform")
+    s3 = boto3.client("s3")
+    bucket = "{{ destinationConfig.bucket }}"
+    key = "{{ destinationConfig.path }}/stream_data_{{ ds_nodash }}.json"
+    s3.put_object(Body=json.dumps(data), Bucket=bucket, Key=key)
+
+with DAG(
+    dag_id="{{ dag_id }}",
+    default_args=default_args,
+    schedule="{{ schedule }}",
+    catchup=False,
+    description="{{ description }}",
+    is_paused_upon_creation=False,
+) as dag:
+    t1 = PythonOperator(task_id="extract", python_callable=extract)
+    t2 = PythonOperator(task_id="transform", python_callable=transform)
+    t3 = PythonOperator(task_id="load", python_callable=load)
+    t1 >> t2 >> t3

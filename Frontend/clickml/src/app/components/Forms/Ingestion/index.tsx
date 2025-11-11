@@ -2,13 +2,17 @@
 import { useAppDispatch, useAppSelector } from "@/redux/hooks/hooks";
 import {
     updateIngestionForm,
-    resetSourceConfig,
     resetURLVerification,
+    updateAlterIngestionForm,
+    updateSourceState,
+    resetSourceState,
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 
 export default function IngestionForm() {
     const ingestionFormState = useAppSelector((state) => state.ingestion);
     const dispatch = useAppDispatch();
+    const alterIngestionFormState = useAppSelector((state) => state.alterIngestion);
+    const sourceState = useAppSelector((state) => state.sourceState);
 
     return (
         <>
@@ -16,11 +20,11 @@ export default function IngestionForm() {
                 <h2 className="font-bold text-xl">Ingestion Pipeline</h2>
                 <input
                     placeholder="Pipeline Name"
-                    value={ingestionFormState.pipelineName}
+                    value={alterIngestionFormState.pipelineName}
                     onChange={(e) => {
                         dispatch(
-                            updateIngestionForm({
-                                ...ingestionFormState,
+                            updateAlterIngestionForm({
+                                ...alterIngestionFormState,
                                 pipelineName: e.target.value,
                             })
                         );
@@ -28,15 +32,15 @@ export default function IngestionForm() {
                     className="border p-2 rounded"
                 />
                 <select
-                    value={ingestionFormState.sourceType}
+                    value={sourceState.sourceType}
                     onChange={(e) => {
                         dispatch(
-                            updateIngestionForm({
-                                ...ingestionFormState,
+                            updateSourceState({
+                                ...sourceState,
                                 sourceType: e.target.value,
                             })
                         );
-                        dispatch(resetSourceConfig());
+                        dispatch(resetSourceState());
                         dispatch(resetURLVerification());
                     }}
                     className="border p-2 rounded"
@@ -49,7 +53,7 @@ export default function IngestionForm() {
                 
                 {/* Ingestion == postgres */}
 
-                {ingestionFormState.sourceType === "postgres" && (
+                {sourceState.sourceType === "postgres" && (
                     <div className="flex flex-col space-y-2 border p-3 rounded">
                         <input
                             type="url"
@@ -57,7 +61,7 @@ export default function IngestionForm() {
                             pattern="https?://.+"
                             placeholder="Host"
                             value={String(
-                                ingestionFormState.sourceConfig.host ?? ""
+                                sourceState.sourceConfig.host ?? ""
                             )}
                             onInvalid={(e) =>
                                 (
@@ -73,10 +77,10 @@ export default function IngestionForm() {
                             }
                             onChange={(e) => {
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             host: e.target.value,
                                         },
                                     })
@@ -87,12 +91,15 @@ export default function IngestionForm() {
                         />
                         <input
                             placeholder="Database"
+                            value={String(
+                                sourceState.sourceConfig.database ?? ""
+                            )}
                             onChange={(e) => {
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             database: e.target.value,
                                         },
                                     })
@@ -104,12 +111,15 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="Table Name"
+                            value={String(
+                                sourceState.sourceConfig.tableName ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             tableName: e.target.value,
                                         },
                                     })
@@ -119,12 +129,15 @@ export default function IngestionForm() {
                         />
                         <input
                             placeholder="User"
+                            value={String(
+                                sourceState.sourceConfig.user ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             user: e.target.value,
                                         },
                                     })
@@ -135,12 +148,15 @@ export default function IngestionForm() {
                         <input
                             type="password"
                             placeholder="Password"
+                            value={String(
+                                sourceState.sourceConfig.password ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             password: e.target.value,
                                         },
                                     })
@@ -153,19 +169,22 @@ export default function IngestionForm() {
 
                 {/* Ingestion == API */}
 
-                {ingestionFormState.sourceType === "api" && (
+                {sourceState.sourceType === "api" && (
                     <div className="flex flex-col space-y-2 border p-3 rounded">
                         <input
                             type="url"
                             pattern="https?://.+"
                             required={true}
                             placeholder="API URL"
+                            value={String(
+                                sourceState.sourceConfig.apiUrl ?? ""
+                            )}
                             onChange={(e) => {
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             apiUrl: e.target.value,
                                         },
                                     })
@@ -177,12 +196,15 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="API Key"
+                            value={String(
+                                sourceState.sourceConfig.apiKey ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             apiKey: e.target.value,
                                         },
                                     })
@@ -193,17 +215,20 @@ export default function IngestionForm() {
                     </div>
                 )}
 
-                {ingestionFormState.sourceType === "s3" && (
+                {sourceState.sourceType === "s3" && (
                     <div className="flex flex-col space-y-2 border p-3 rounded">
                         <input
                             type="text"
                             placeholder="Bucket Name"
+                            value={String(
+                                sourceState.sourceConfig.bucketName ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             bucketName: e.target.value,
                                         },
                                     })
@@ -214,12 +239,15 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="AWS Access Key"
+                            value={String(
+                                sourceState.sourceConfig.awsAccessKey ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             awsAccessKey: e.target.value,
                                         },
                                     })
@@ -230,12 +258,15 @@ export default function IngestionForm() {
                         <input
                             type="text"
                             placeholder="AWS Secret Key"
+                            value={String(
+                                sourceState.sourceConfig.awsSecretKey ?? ""
+                            )}
                             onChange={(e) =>
                                 dispatch(
-                                    updateIngestionForm({
-                                        ...ingestionFormState,
+                                    updateSourceState({
+                                        ...sourceState,
                                         sourceConfig: {
-                                            ...ingestionFormState.sourceConfig,
+                                            ...sourceState.sourceConfig,
                                             awsSecretKey: e.target.value,
                                         },
                                     })

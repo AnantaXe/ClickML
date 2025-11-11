@@ -1,0 +1,162 @@
+["db to db", {
+    "ingestionForm": {
+        "pipelineName": "db_to_db_sales_etl",
+        "description": "ETL from MySQL sales DB to PostgreSQL warehouse",
+        "cron": "0 3 * * *"
+    },
+    "source": {
+        "sourceType": "mysql",
+        "sourceConfig": {
+            "host": "source-db.company.com",
+            "port": 3306,
+            "user": "source_user",
+            "password": "source_pass",
+            "database": "sales_db"
+        },
+        "sourceQuery": "SELECT id, amount, region, date FROM transactions;"
+    },
+    "transform": {
+        "transformLogic": {
+            "cleaningRules": ["amount > 0", "region != 'TEST'"],
+            "featureList": ["id", "amount", "region", "date"],
+            "pythonFunction": "def custom_transform(df):\n    df['amount'] = df['amount'] * 1.1\n    return df"
+        }
+    },
+    "destination": {
+        "destinationType": "postgres",
+        "destinationConfig": {
+            "host": "warehouse-db.company.com",
+            "port": 5432,
+            "user": "warehouse_user",
+            "password": "warehouse_pass",
+            "database": "analytics"
+        },
+        "destinationTable": "sales_fact"
+    }
+},
+"api to db", {
+    "ingestionForm": {
+        "pipelineName": "api_to_db_orders",
+        "description": "Fetch daily orders via REST API and load to PostgreSQL",
+        "cron": "0 */6 * * *"
+    },
+    "source": {
+        "sourceType": "api",
+        "sourceConfig": {
+            "apiUrl": "https://api.example.com/orders",
+            "headers": {
+                "Authorization": "Bearer abc123xyz",
+                "Accept": "application/json"
+            }
+        }
+    },
+    "transform": {
+        "transformLogic": {
+            "selectedFields": ["order_id", "customer_id", "amount", "status"],
+            "cleaningRules": ["status == 'completed'"],
+            "pythonFunction": ""
+        }
+    },
+    "destination": {
+        "destinationType": "postgres",
+        "destinationConfig": {
+            "host": "analytics-db.company.com",
+            "port": 5432,
+            "user": "postgres_user",
+            "password": "postgres_pass",
+            "database": "orders_db"
+        },
+        "destinationTable": "daily_orders"
+    }
+},
+"file to db", {
+    "ingestionForm": {
+        "pipelineName": "csv_to_postgres_inventory",
+        "description": "Import inventory data from CSV to PostgreSQL",
+        "cron": "30 1 * * *"
+    },
+    "source": {
+        "sourceType": "file",
+        "sourceConfig": {
+            "filePath": "/opt/airflow/shared/inventory.csv",
+            "fileType": "csv"
+        }
+    },
+    "transform": {
+        "transformLogic": {
+            "featureList": ["product_id", "category", "stock", "price"],
+            "cleaningRules": ["stock > 0"],
+            "pythonFunction": ""
+        }
+    },
+    "destination": {
+        "destinationType": "postgres",
+        "destinationConfig": {
+            "host": "db.internal",
+            "port": 5432,
+            "user": "admin",
+            "password": "secure123",
+            "database": "inventory_db"
+        },
+        "destinationTable": "inventory_master"
+    }
+}, 
+"stream to s3", {
+    "ingestionForm": {
+        "pipelineName": "kafka_to_s3_stream",
+        "description": "Stream order data from Kafka topic into S3 every 5 minutes",
+        "cron": "*/5 * * * *"
+    },
+    "source": {
+        "sourceType": "kafka",
+        "sourceConfig": {
+            "bootstrap_servers": "broker1:9092,broker2:9092",
+            "topic": "orders_stream",
+            "group_id": "etl_orders_consumer",
+            "batch_size": 100
+        }
+    },
+    "transform": {
+        "transformLogic": {
+            "featureList": ["order_id", "timestamp", "amount", "region"],
+            "cleaningRules": [],
+            "pythonFunction": ""
+        }
+    },
+    "destination": {
+        "destinationType": "s3",
+        "destinationConfig": {
+            "bucket": "clickml-etl-storage",
+            "path": "stream/orders"
+        }
+    }
+},
+"file to file", {
+    "ingestionForm": {
+        "pipelineName": "local_csv_to_s3",
+        "description": "Clean CSV and upload to S3",
+        "cron": "0 4 * * *"
+    },
+    "source": {
+        "sourceType": "file",
+        "sourceConfig": {
+            "filePath": "/usr/local/airflow/shared/raw_data.csv",
+            "fileType": "csv"
+        }
+    },
+    "transform": {
+        "transformLogic": {
+            "cleaningRules": ["age > 18", "income > 0"],
+            "featureList": ["id", "age", "income"],
+            "pythonFunction": ""
+        }
+    },
+    "destination": {
+        "destinationType": "s3",
+        "destinationConfig": {
+            "bucket": "clickml-etl-storage",
+            "path": "cleaned/data"
+        }
+    }
+}
+]

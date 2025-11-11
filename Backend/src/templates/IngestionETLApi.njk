@@ -1,0 +1,67 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+
+POSTGRES_CONN_ID = "postgres_default"
+
+default_args = {
+    "owner": "airflow",
+    "depends_on_past": false,
+    "start_date": datetime(2025, 1, 1),
+    "email_on_failure": false,
+    "email_on_retry": false,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
+
+def extract(**context):
+
+    print("Extracting data from {{ source }}")
+    http_hook = HttpHook(method="GET", http_conn_id="source_api")
+
+    endpoint = "{{ apiUrl }}"
+    response = http_hook.run(endpoint)
+
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch data: {response.text}")
+    else:
+        print("Data extracted successfully")
+        return response.json()
+
+
+def transform(**context):
+
+    data = context["task_instance"].xcom_pull(task_ids="extract")
+    print("Transforming data with columns: {{ input_features }}")
+    # extracting only specified input features
+    transformed_data = [
+        {key: record[key] for key in {{ input_features }} if key in record}
+        for record in data
+    ]
+    print("Data transformed successfully")
+    return transformed_data
+
+def load(**context):
+    data = context["task_instance"].xcom_pull(task_ids="transform")
+    print("Loading data to {{ destination }}")
+
+    
+
+    {# print("Destination config: {{ destination_config }}") #}
+
+with DAG(
+    dag_id="{{ dag_id }}",
+    default_args=default_args,
+    description="{{ description }}",
+    schedule="{{ schedule }}",
+    catchup=false,
+    is_paused_upon_creation=false,
+) as dag:
+    t1 = PythonOperator(task_id="extract", python_callable=extract)
+    t2 = PythonOperator(task_id="transform", python_callable=transform)
+    t3 = PythonOperator(task_id="load", python_callable=load)
+
+    t1 >> t2 >> t3

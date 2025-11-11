@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-// import type { RootState } from "../../store";
 
 //----------------- Deployment States -------------------//
 
@@ -19,6 +18,7 @@ interface DestinationState {
     // isActive: boolean;
     destinationType: string;
     destinationConfig: Record<string, unknown>
+    destinationTable: string;
 }
 
 
@@ -26,8 +26,32 @@ const initialDestinationState: DestinationState = {
     // isActive: false,
     destinationType: "",
     destinationConfig: {} as Record<string, unknown>,
+    destinationTable: "",
 };
 
+// ----------------- Source States -------------------//
+
+interface SourceState {
+    sourceType: string;
+    sourceConfig: Record<string, unknown>;
+    sourceQuery?: string;
+}
+
+const initialSourceState: SourceState = {
+    sourceType: "",
+    sourceConfig: {} as Record<string, unknown>,
+    sourceQuery: "",
+};
+
+// ----------------- Transformation States -------------------//
+
+interface TransformationConfigState {
+    transformationLogic: Record<string, unknown>;
+}
+
+const initialTransformationConfigState: TransformationConfigState = {
+    transformationLogic: {} as Record<string, unknown>,
+};
 
 //----------------- Ingestion Form State and Initial State -----------------//
 
@@ -50,6 +74,18 @@ const initialIngestionFormState: IngestionFormState = {
     formType: "Ingestion",
     // Destination: initialDestinationState
 
+};
+
+interface AlterIngestionForm {
+    pipelineName: string;
+    cron: string;
+    description: string;
+}
+
+const initialAlterIngestionForm: AlterIngestionForm = {
+    pipelineName: "",
+    cron: "0 2 * * *",
+    description: "",
 };
 
 //-------------- Enrichment Form State and Initial State -----------------//
@@ -142,7 +178,49 @@ const initialDestinationConnectionStatus: DestinationConnectionStatus = {
 
 //----------------- Redux Slices -----------------//
 
-export const deployedmentSlice = createSlice({
+export const SourceStateSlice = createSlice({
+    name: "sourceState",
+    initialState: initialSourceState,
+    reducers: {
+        updateSourceState: (
+            state,
+            action: PayloadAction<Partial<SourceState>>
+        ) => {
+            return { ...state, ...action.payload };
+        },
+        resetSourceState: () => initialSourceState,
+    },
+});
+
+export const AlterIngestionFormSlice = createSlice({
+    name: "alterIngestionForm",
+    initialState: initialAlterIngestionForm,
+    reducers: {
+        updateAlterIngestionForm: (
+            state,
+            action: PayloadAction<Partial<AlterIngestionForm>>
+        ) => {
+            return { ...state, ...action.payload };
+        },
+        resetAlterIngestionForm: () => initialAlterIngestionForm,
+    },
+});
+
+export const transformationConfigSlice = createSlice({
+    name: "transformationConfig",
+    initialState: initialTransformationConfigState,
+    reducers: {
+        updateTransformationConfig: (
+            state,
+            action: PayloadAction<Partial<TransformationConfigState>>
+        ) => {
+            return { ...state, ...action.payload };
+        },
+        resetTransformationConfigState: () => initialTransformationConfigState,
+    },
+});
+
+export const deploymentSlice = createSlice({
     name: "deployment",
     initialState: initialDeploymentState,
     reducers: {
@@ -258,25 +336,25 @@ export const destinationSlice = createSlice({
 });
 
 
-export const { updateDeploymentStatus, resetDeploymentStatus } = deployedmentSlice.actions;
+export const { updateDeploymentStatus, resetDeploymentStatus } = deploymentSlice.actions;
 export const { updateIngestionForm, resetIngestionForm, resetSourceConfig, resetSelectedFields } = ingestionSlice.actions;
-export const { updateTransformationForm, resetTransformationForm } =
-    transformationSlice.actions;
-export const { updateEnrichmentForm, resetEnrichmentForm } =
-    enrichmentSlice.actions;
-export const { updateMonitoringForm, resetMonitoringForm } =
-    monitoringSlice.actions;
-
+export const { updateTransformationForm, resetTransformationForm } = transformationSlice.actions;
+export const { updateEnrichmentForm, resetEnrichmentForm } = enrichmentSlice.actions;
+export const { updateMonitoringForm, resetMonitoringForm } = monitoringSlice.actions;
+export const { updateAlterIngestionForm, resetAlterIngestionForm } = AlterIngestionFormSlice.actions;
 export const { updateURLVerification, resetURLVerification } = urlVerificationSlice.actions;
 export const { updateDestination, resetDestination, resetDestinationConfig } = destinationSlice.actions;
 export const { updateConnectionStatus, resetConnectionStatus } = destinationConnectionSlice.actions;
-
-
+export const { updateTransformationConfig, resetTransformationConfigState } = transformationConfigSlice.actions;
+export const { updateSourceState, resetSourceState } = SourceStateSlice.actions;
 export const destinationConnectionReducer = destinationConnectionSlice.reducer;
 export const urlVerificationReducer = urlVerificationSlice.reducer;
 export const enrichmentReducer = enrichmentSlice.reducer;
 export const ingestionReducer = ingestionSlice.reducer;
+export const alterIngestionFormReducer = AlterIngestionFormSlice.reducer;
 export const transformationReducer = transformationSlice.reducer;
 export const monitoringReducer = monitoringSlice.reducer;
 export const destinationReducer = destinationSlice.reducer;
-export const deploymentReducer = deployedmentSlice.reducer;
+export const deploymentReducer = deploymentSlice.reducer;
+export const transformationConfigReducer = transformationConfigSlice.reducer;
+export const sourceStateReducer = SourceStateSlice.reducer;

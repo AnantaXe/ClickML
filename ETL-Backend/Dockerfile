@@ -9,10 +9,6 @@ RUN apt-get update && apt-get install -y bash
 
 RUN pip install --no-cache-dir fastapi uvicorn jinja2 pydantic paramiko apache-airflow-providers-ssh apache-airflow-providers-dbt-cloud apache-airflow-providers-sftp[common.compat] apache-airflow-providers-amazon requests boto3
 
-
-COPY fastapi_backend /app/fastapi_backend
-
-
 WORKDIR /
 
 

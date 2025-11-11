@@ -5,7 +5,6 @@ const Loading = "/images/Loading.gif";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks/hooks";
 import {
     updateDestination,
-    resetDestination,
     resetDestinationConfig,
     updateConnectionStatus,
     updateDeploymentStatus
@@ -14,7 +13,9 @@ import {
 export default function TargetForm() {
     const dispatch = useAppDispatch();
     const destination = useAppSelector((state) => state.destination);
-    const ingestionFormState = useAppSelector((state) => state.ingestion);
+    const alterIngestionFormState = useAppSelector((state) => state.alterIngestion);
+    const transformationConfigState = useAppSelector((state) => state.transformationConfig);
+    const sourceState = useAppSelector((state) => state.sourceState);
 
     const deployment = useAppSelector((state) => state.deployment);
 
@@ -94,8 +95,10 @@ export default function TargetForm() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
+                source: sourceState,
+                ingestion: alterIngestionFormState,
+                transformation: transformationConfigState,
                 destination: destination,
-                ingestionForm: ingestionFormState,
             })
         }).then((res) => res.json())
         .then((data) => {
