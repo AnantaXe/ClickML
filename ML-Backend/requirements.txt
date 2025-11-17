@@ -1,4 +1,3 @@
-prefect
 fastapi[standard]
 pandas
 numpy
@@ -9,3 +8,6 @@ awscli
 reportlab
 dill
 ml-report-kit
+psycopg2
+seaborn
+sqlalchemy

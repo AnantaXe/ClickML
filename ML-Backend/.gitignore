@@ -1,5 +1,6 @@
-venv/
+.venv/
 .env
 .gitignore
-ML-Backend\__pycache__
+ML-Backend\__pycache__/
+__pycache__/
 ML-Backend\Machine_learning\Components\__pycache__

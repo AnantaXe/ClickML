@@ -1,64 +1,31 @@
 from fastapi import FastAPI, Request
-from fastapi.concurrency import run_in_threadpool
-# from prefect import flow
-# from prefect.server.schemas.schedules import CronSchedule
-# from prefect.schedules import CronSchedule 
-from etl_flows.ETLSchedular.etl_flow import etl_flow   # <-- import the flow
-
 from Machine_learning.Components.Model_trainer import ModelTrainer
-# from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.post("/create-etl-pipeline")
-async def create_pipeline(request: Request):
-    cfg = await request.json()
-
-    # cron_schedule = CronSchedule(cron=cfg["cron"])
-    # every_three_min = IntervalSchedule(interval=timedelta(minutes=3))
-    cron_expr = cfg.get("cron")
-
-    schedule = None
-    if cron_expr:
-        schedule = {
-            "cron": cron_expr,
-            "timezone": "UTC"
-        }
-
-    # create the deployment directly from the flow
-    await run_in_threadpool(
-        etl_flow.deploy,
-        name=cfg["pipelinename"],
-        parameters={
-            "pipelinename": cfg["pipelinename"],
-            "endpoint": cfg["endpoint"],
-            "input_features": cfg["input_features"],
-        },
-        work_pool_name="myworkpool",
-        schedule=schedule,
-        image="imckr/my-prefect-image:latest",
-        # image="prefecthq/prefect-client:3-latest",
-    )
-
-    return {"status": "scheduled"}
-
-class Item(BaseModel):
-    user_name:str
-    DBsource:dict # Data source dict format
-    modelConfig:dict
+# class Item(BaseModel):
+#     user_name:str
+#     DBsource:dict # Data source dict format
+#     modelConfig:dict
      
-
 @app.post("/model_training")
-async def create_item(item: Item):
-    user_name=item.user_name
-    DBsource=item.DBsource
-    target_feature=item.DBsource.get("features",{}).get("targetf",{})
-    model_type=item.modelConfig.get("modelType")
-    params=item.modelConfig.get("modelparams")
-    model_name=item.modelConfig.get("modelName")
+async def create_item(request: Request):
+    try:
+        req = await request.json()
+        user_name = req.get("user_name")
 
-    model_path_s3,report_path_s3=ModelTrainer.model_training_initiate(DBsource,target_feature,model_type,params,user_name,model_name)
+        DBsource = req.get("DBsource", {})
+        target_feature = DBsource.get("features", {}).get("targetf")
+        modelConfig = req.get("modelConfig", {})
+        model_type = modelConfig.get("modelType")
+        params = modelConfig.get("modelparams")
+        model_name = modelConfig.get("modelName")
     
-    return model_path_s3,report_path_s3
+        model_path_s3, report_path_s3 = ModelTrainer.model_training_initiate(DBsource, target_feature, model_type, params, user_name, model_name)
+
+    except Exception as e:
+        return  {"status":"failure","message":str(e)}
+    
+    return {"status": "success", "model_path_s3": model_path_s3, "report_path_s3": report_path_s3}
 

@@ -6,6 +6,7 @@ import pickle
 import psycopg2
 import pandas as pd
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -83,7 +84,7 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
 
     # Build S3 key: directory + filename
     s3_key = f"{s3_directory}{filename}"
-    s3_key_report=f"{s3_directory}report"
+    s3_key_report=f"{s3_directory}report.pdf"
 
     # Upload to S3
     load_dotenv()
@@ -92,7 +93,7 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
     secret_access_key=os.getenv("aws_secret_access_key")
     s3 = boto3.client("s3",aws_access_key_id=access_key,aws_secret_access_key=secret_access_key)
     s3.upload_file(local_path, bucket_name, s3_key)
-    s3.upload_file(report_path,bucket_name,s3_key_report)
+    s3.upload_file(report_path,bucket_name,s3_key_report, ExtraArgs={'ContentType': 'application/pdf'})
 
     # Optional: remove local temp file
     os.remove(local_path)
@@ -101,35 +102,42 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
     report_s3=f"s3://{bucket_name}/{s3_key_report}"
 
     return model_s3,report_s3
- 
  # Function to fetch data from users postgres database
 def fetch_data_postgresql(DBsource:dict):
 # --- Connect to PostgreSQL ---
     
-    conn = psycopg2.connect(
-        host=DBsource["host"],
-        port=DBsource.get("port",5432),
-        database=DBsource["database"],
-        user=DBsource["user"],
-        password=DBsource["password"]
-    )
+    host = DBsource["host"]
+    port = DBsource.get("port",5432)
+    database = DBsource["database"]
+    user = DBsource["user"]
+    password = DBsource["password"]
     
     # from table name and selected models will come here
     # --- Read table into DataFrame ---
-    features=DBsource["features"]
-    targetf=features.get("targetf")
-    inputf=features.get("inputf")
-    table=DBsource.get("table")
-    query = f"SELECT {inputf} , {targetf} FROM {table};"
-    df = pd.read_sql(query, conn)
+    features = DBsource["features"]
+    targetf = features.get("targetf")
+    inputf = features.get("inputf")
+    table = DBsource.get("table")
+    # Normalize input fields: accept list/tuple or comma-separated string
+    if isinstance(inputf, (list, tuple)):
+        columns = ", ".join(inputf)
+    elif isinstance(inputf, str):
+        columns = inputf
+    else:
+        raise ValueError("inputf must be a list/tuple of column names or a comma-separated string")
+    query = f"SELECT {columns}, {targetf} FROM {table};"
 
-    # --- Show headers and first few rows ---
-    print("Headers:", df.columns.tolist())
-
+    # Use SQLAlchemy engine to avoid pandas DBAPI warning
+    conn_str = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+    engine = create_engine(conn_str)
+    try:
+        df = pd.read_sql_query(query, engine)
+        # --- Show headers and first few rows ---
+        print("Headers:", df.columns.tolist())
+    finally:
+        engine.dispose()
     
-    # --- Close connection ---
-    conn.close()
-    
+    return df
     return df
 
 
