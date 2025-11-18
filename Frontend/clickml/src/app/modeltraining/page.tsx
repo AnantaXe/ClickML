@@ -20,8 +20,8 @@ export default function ModelTraining() {
     // ----------- Options List Sidebar -----------//
 
     const SidebarOptions = [
-        { name: "New Pipeline", href: "" },
-        { name: "Saved Pipeline", href: "" },
+        { name: "Train Model", href: "" },
+        { name: "Saved Models", href: "" },
     ];
 
     const [activeSection, setActiveSection] = useState(SidebarOptions[0].name);

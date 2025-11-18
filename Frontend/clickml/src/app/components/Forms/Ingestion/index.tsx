@@ -40,7 +40,6 @@ export default function IngestionForm() {
                                 sourceType: e.target.value,
                             })
                         );
-                        dispatch(resetSourceState());
                         dispatch(resetURLVerification());
                     }}
                     className="border p-2 rounded"

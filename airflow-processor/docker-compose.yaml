@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow:
+    build: .
+    image: local-airflow:2.7.3
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+      AIRFLOW_ADMIN_PASSWORD: admin
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 1
+      AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 10
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    ports:
+      - "8080:8080"
+    # override default entrypoint so /entrypoint.sh runs (ensure entrypoint.sh exists)
+    entrypoint: ["/bin/bash", "-c", "/entrypoint.sh"]
+
+volumes:
+  postgres_data:

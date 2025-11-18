@@ -4,14 +4,12 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 interface LinearRegressionConfig {
     fitIntercept: boolean;
-    normalize: boolean;
     copyX: boolean;
     nJobs: number | null;
 }
 
 const initialLRConfigState: LinearRegressionConfig = {
     fitIntercept: true,
-    normalize: false,
     copyX: true,
     nJobs: null,
 };

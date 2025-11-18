@@ -99,7 +99,7 @@ export default function LinearRegressionForm() {
     }, []);
 
     const handleTrain = useCallback(
-        (e?: React.FormEvent) => {
+        async (e?: React.FormEvent) => {
             e?.preventDefault?.();
 
             // validate minimal constraints
@@ -112,31 +112,13 @@ export default function LinearRegressionForm() {
                 return;
             }
 
-            // Dispatch only the LinearRegression slice fields (fits your slice)
             dispatch(
                 updateLinearRegressionConfig({
                     fitIntercept: state.fitIntercept,
-                    normalize: state.normalize,
                     copyX: state.copyX,
                     nJobs: state.nJobs,
                 })
             );
-
-            // Replace this with your actual submit action (API call / parent form submit)
-            console.log("Training Linear Regression with payload:", {
-                DBSource : {
-                    modelDataSource,
-                    features: {
-                        targetf: state.targetColumn,
-                        featuref: parseFeatureColumns(),
-                    }
-                },
-                modelConfig: {
-                    modelName,
-                    modelParams: state,
-                    modelType: "Linear Regression",
-                },
-            });
 
             const payload = {
                 DBSource: {
@@ -153,16 +135,40 @@ export default function LinearRegressionForm() {
                 },
             };
 
-            const response = fetch("/api/train/linear-regression", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            })
+            try {
+                const res = await fetch(
+                    "http://localhost:8000/linear_regression",
+                    {
+                        method: "POST",
+                        mode: "cors", // optional
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify(payload),
+                    }
+                );
+
+                if (!res.ok) {
+                    const text = await res.text().catch(() => null);
+                    console.error("Server error:", res.status, text);
+                    alert(`Server returned ${res.status}`);
+                    return;
+                }
+
+                const data = await res.json().catch(() => null);
+                console.log("Training response:", data);
+                // do UI updates, notify user, etc.
+            } catch (err) {
+                console.error("Network / fetch error:", err);
+                alert(
+                    "Network or CORS error — check console and server CORS settings."
+                );
+            }
         },
-        [dispatch, state, parseFeatureColumns]
+        [dispatch, state, parseFeatureColumns, modelDataSource, modelName]
     );
+
 
     const handleReset = useCallback(() => {
         localDispatch({ type: "RESET" });
@@ -438,17 +444,7 @@ export default function LinearRegressionForm() {
                             <span>Fit Intercept</span>
                         </label>
 
-                        <label className="flex items-center space-x-2">
-                            <input
-                                type="checkbox"
-                                checked={state.normalize}
-                                onChange={(e) =>
-                                    setField("normalize", e.target.checked)
-                                }
-                                className="rounded"
-                            />
-                            <span>Normalize</span>
-                        </label>
+        
 
                         <label className="flex items-center space-x-2">
                             <input
