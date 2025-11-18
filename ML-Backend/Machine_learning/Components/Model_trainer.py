@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeClassifier,DecisionTreeRegressor
 from Machine_learning.Components.utils import evaluate_model,fetch_data_postgresql
 from Machine_learning.Components.Data_preprocess import Preprocess
 from Machine_learning.Components.data_transformation import DataTransformation
-from Machine_learning.Components.utils import upload_to_s3
+from Machine_learning.Components.utils import upload_to_s3,params_handle
 
 @dataclass
 class ModelTrainerConfig:
@@ -18,7 +18,7 @@ class ModelTrainer:
     def __init__(self):
         self.model_trainer_config=ModelTrainerConfig
 
-    def model_object_saving_to_s3(self,train_array,test_array,model,params:dict,user_name,Model_name):
+    def model_object_saving_to_s3(self,train_array,test_array,model,params:dict,user_name,Model_name,isclassify:bool):
     
             X_train,y_train,X_test,y_test=(
                 train_array[:,:-1],
@@ -28,7 +28,7 @@ class ModelTrainer:
             )
 #evaluate models is a function in utils that returns the model and its report local path
             model_report_path,Trained_model = evaluate_model(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,
-                                               model=model,param=params)
+                                               model=model,param=params,isclassify=isclassify)
             
             #updating the user name in the s3 bucket
             dir_path:str= f"Users_models/{user_name}/Models/{Model_name}" 
@@ -38,7 +38,7 @@ class ModelTrainer:
             
     
 
-    def model_training_initiate(DBsource,Target_feature,model,params,user_name,model_name):
+    def model_training_initiate(DBsource,Target_feature,model,params,user_name,model_name,isclassify:bool):
         
         Data=fetch_data_postgresql(DBsource) # from configuration file
         Data=Preprocess(Data)# returns preprocessed train and test dataset
@@ -46,10 +46,11 @@ class ModelTrainer:
         Data_Transformation=DataTransformation()
         Trans_Train,Trans_Test=Data_Transformation.initiate_data_transformation(Data,Target_feature) # returns transformed Data
 
+        handled_parms=params_handle(params,model)
         model=ModelTrainer.Getting_model_object(model)
 
         ModelTrain=ModelTrainer()
-        model_path_s3,report_path_s3=ModelTrain.model_object_saving_to_s3(Trans_Train,Trans_Test,model,params,user_name,model_name)
+        model_path_s3,report_path_s3=ModelTrain.model_object_saving_to_s3(Trans_Train,Trans_Test,model,handled_parms,user_name,model_name,isclassify=isclassify)
         return model_path_s3,report_path_s3
         
         
