@@ -105,19 +105,22 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
  # Function to fetch data from users postgres database
 def fetch_data_postgresql(DBsource:dict):
 # --- Connect to PostgreSQL ---
+    modelDataSource=DBsource.get("modelDataSource")
+    sourceDetails=modelDataSource.get("sourceDetails")
+    host = sourceDetails["host"]
+    port = sourceDetails.get("port",5432)
+    database = sourceDetails["database"]
+    user = sourceDetails["user"]
+    password = sourceDetails["password"]
     
-    host = DBsource["host"]
-    port = DBsource.get("port",5432)
-    database = DBsource["database"]
-    user = DBsource["user"]
-    password = DBsource["password"]
+    sourcetype=sourceDetails.get("sourceType")
     
     # from table name and selected models will come here
     # --- Read table into DataFrame ---
     features = DBsource["features"]
     targetf = features.get("targetf")
     inputf = features.get("inputf")
-    table = DBsource.get("table")
+    table = sourceDetails.get("table")
     # Normalize input fields: accept list/tuple or comma-separated string
     if isinstance(inputf, (list, tuple)):
         columns = ", ".join(inputf)
@@ -138,8 +141,6 @@ def fetch_data_postgresql(DBsource:dict):
         engine.dispose()
     
     return df
-    return df
-
 
 
 
