@@ -33,12 +33,12 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
 
-def evaluate_model(X_train,y_train,X_test,y_test,model,param):
+def evaluate_model(X_train,y_train,X_test,y_test,model,param,isclassify:bool):
 
-            gs = GridSearchCV(model,param,cv=3)
-            gs.fit(X_train,y_train)
+            # gs = GridSearchCV(model,param,cv=3)
+            # gs.fit(X_train,y_train)
 
-            model.set_params(**gs.best_params_)
+            model.set_params(**param)
             model=model.fit(X_train,y_train)
             
             #Making Predictions
@@ -48,7 +48,7 @@ def evaluate_model(X_train,y_train,X_test,y_test,model,param):
             # report = f"{model.__class__.__name__}:trained_model_score:{train_model_score},test_model_score:{test_model_score}"
             timestamp=datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             output_path = f"Model_Report_{timestamp}.pdf"
-            report_path=generate_ml_report(y_true=y_test,y_pred=y_test_pred,report_temp_path=output_path)
+            report_path=generate_ml_report(y_true=y_test,y_pred=y_test_pred,report_temp_path=output_path,is_classify=isclassify)
             
             return report_path,model
     
@@ -79,7 +79,7 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
         s3_directory += '/'
 
     # Create a temporary local file
-    local_path = f"/tmp/{filename}"
+    local_path = f"/tmp/{filename}.pkl"
     save_object(local_path,model_obj)
 
     # Build S3 key: directory + filename
@@ -105,8 +105,8 @@ def upload_to_s3(model_obj,report_path, bucket_name, s3_directory, filename, reg
  # Function to fetch data from users postgres database
 def fetch_data_postgresql(DBsource:dict):
 # --- Connect to PostgreSQL ---
-    modelDataSource=DBsource.get("modelDataSource")
-    sourceDetails=modelDataSource.get("sourceDetails")
+    modelDataSource:dict=DBsource.get("modelDataSource")
+    sourceDetails:dict=modelDataSource.get("sourceDetails")
     host = sourceDetails["host"]
     port = sourceDetails.get("port",5432)
     database = sourceDetails["database"]
@@ -119,15 +119,15 @@ def fetch_data_postgresql(DBsource:dict):
     # --- Read table into DataFrame ---
     features = DBsource["features"]
     targetf = features.get("targetf")
-    inputf = features.get("inputf")
-    table = sourceDetails.get("table")
+    featuref = features.get("featuref")
+    table = sourceDetails.get("tableName")
     # Normalize input fields: accept list/tuple or comma-separated string
-    if isinstance(inputf, (list, tuple)):
-        columns = ", ".join(inputf)
-    elif isinstance(inputf, str):
-        columns = inputf
+    if isinstance(featuref, (list, tuple)):
+        columns = ", ".join(featuref)
+    elif isinstance(featuref, str):
+        columns = featuref
     else:
-        raise ValueError("inputf must be a list/tuple of column names or a comma-separated string")
+        raise ValueError("featuref must be a list/tuple of column names or a comma-separated string")
     query = f"SELECT {columns}, {targetf} FROM {table};"
 
     # Use SQLAlchemy engine to avoid pandas DBAPI warning
@@ -141,24 +141,23 @@ def fetch_data_postgresql(DBsource:dict):
         engine.dispose()
     
     return df
+    return df
 
 
 
-def generate_ml_report(y_true, y_pred,report_temp_path, y_prob=None, model_name="ML_Model"):
+
+def generate_ml_report(y_true, y_pred,report_temp_path,is_classify:bool,y_prob=None, model_name="ML_Model"):
     """
     Generate a detailed PDF report for any ML model (Classification or Regression)
     Includes metrics, visualizations, and summaries.
     """
-
-    # Detect problem type
-    is_classification = len(np.unique(y_true)) < 20 and np.array_equal(np.unique(y_true), np.unique(y_true).astype(int))
     
     tmpdir = tempfile.mkdtemp()
     plots = []
     styles = getSampleStyleSheet()
 
     # ========== CLASSIFICATION REPORT ==========
-    if is_classification:
+    if is_classify:
         acc = accuracy_score(y_true, y_pred)
         prec = precision_score(y_true, y_pred, average='weighted', zero_division=0)
         rec = recall_score(y_true, y_pred, average='weighted', zero_division=0)
@@ -343,3 +342,58 @@ def generate_ml_report(y_true, y_pred,report_temp_path, y_prob=None, model_name=
 
         doc.build(story)
         return report_temp_path
+
+def params_handle(params,model):
+    if model=="Linear_regression":
+        params.update({'fit_intercept': params.pop('fitIntercept')})
+        params.update({'copy_X': params.pop('copyX')})
+        params.update({'n_jobs': params.pop('nJobs')})
+        
+        return params
+    
+    if model=="Decision_tree_Classifier":
+        params.update({'criterion': params.pop('criterion')})
+        params.update({'splitter': params.pop('splitter')})
+        params.update({'max_depth': params.pop('maxDepth')})
+        params.update({'min_samples_split': params.pop('minSamplesSplit')})
+        params.update({'min_samples_leaf': params.pop('minSamplesLeaf')})
+        params.update({'max_features': params.pop('maxFeatures')})
+        
+        return params
+    
+    if model=="Decision_tree_Regression":
+        params.update({'criterion': params.pop('criterion')})
+        params.update({'splitter': params.pop('splitter')})
+        params.update({'max_depth': params.pop('maxDepth')})
+        params.update({'min_samples_split': params.pop('minSamplesSplit')})
+        params.update({'min_samples_leaf': params.pop('minSamplesLeaf')})
+        params.update({'max_features': params.pop('maxFeatures')})
+        
+        return params
+    
+    if model=="Random_forest_Classifier":
+        params.update({'criterion': params.pop('criterion')})
+        params.update({'n_estimators': params.pop('nEstimators')})
+        params.update({'max_depth': params.pop('maxDepth')})
+        params.update({'min_samples_split': params.pop('minSamplesSplit')})
+        params.update({'min_samples_leaf': params.pop('minSamplesLeaf')})
+        params.update({'max_features': params.pop('maxFeatures')})
+        params.update({'bootstrap': params.pop('bootstrap')})
+        params.update({'oob_score': params.pop('oobScore')})
+        params.update({'n_jobs': params.pop('nJobs')})
+        
+        return params
+    
+    if model=="Random_forest_Regression":
+        params.update({'criterion': params.pop('criterion')})
+        params.update({'n_estimators': params.pop('nEstimators')})
+        params.update({'max_depth': params.pop('maxDepth')})
+        params.update({'min_samples_split': params.pop('minSamplesSplit')})
+        params.update({'min_samples_leaf': params.pop('minSamplesLeaf')})
+        params.update({'max_features': params.pop('maxFeatures')})
+        params.update({'bootstrap': params.pop('bootstrap')})
+        params.update({'oob_score': params.pop('oobScore')})
+        params.update({'n_jobs': params.pop('nJobs')})
+        
+        return params
+    
