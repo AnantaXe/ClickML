@@ -32,6 +32,7 @@ type Action =
     | { type: "RESET"; payload?: Partial<DecisionTreeState> };
 
 const initialDecisionTreeState: DecisionTreeState = {
+
     criterion: "gini",
     splitter: "best",
     maxDepth: null,
@@ -56,10 +57,14 @@ function reducer(state: DecisionTreeState, action: Action): DecisionTreeState {
 
 export default function DecisionTreeForm() {
     const dispatch = useAppDispatch();
-    const modelDataSource = useAppSelector((s) => s.modelDataSourceConfig);
-
+    // const modelDataSource = useAppSelector((s) => s.modelDataSourceConfig);
+    const [featureColumns, setFeatureColumns] = useState("");
+    const [targetColumn, setTargetColumn] = useState("");
     const [open, setOpen] = useState(false);
     const [modelName, setModelName] = useState("");
+    const modelDataSource = useAppSelector(
+            (state) => state.modelDataSourceConfig
+        );
     const [state, localDispatch] = useReducer(
         reducer,
         initialDecisionTreeState
@@ -76,14 +81,29 @@ export default function DecisionTreeForm() {
         []
     );
 
+    const handleFeatureColumnsChange = useCallback(
+            (v: string) => {
+                // normalize whitespace and commas
+                const cleaned = v.replace(/\s*,\s*/g, ",").replace(/\s+/g, " ");
+                setFeatureColumns(cleaned);
+            },
+            [setFeatureColumns]
+        );
+
     const parseNullableNumber = useCallback((val: string) => {
         if (val === "" || val === "null") return null;
         const n = parseInt(val, 10);
         return Number.isNaN(n) ? null : n;
     }, []);
 
+    const parseFeatureColumns = useCallback(() => {
+            return featureColumns
+                .split(",")
+                .map((f) => f.trim())
+                .filter(Boolean);
+        }, [featureColumns]);
     const handleSave = useCallback(
-        (e?: React.FormEvent) => {
+        async (e?: React.FormEvent) => {
             e?.preventDefault?.();
 
             // basic validation
@@ -112,20 +132,57 @@ export default function DecisionTreeForm() {
                 })
             );
 
-            console.log("DecisionTreeForm - submit payload:", {
-                modelName,
-                decisionTree: {
-                    criterion: state.criterion,
-                    splitter: state.splitter,
-                    maxDepth: state.maxDepth,
-                    minSamplesSplit: state.minSamplesSplit,
-                    minSamplesLeaf: state.minSamplesLeaf,
-                    maxFeatures: state.maxFeatures,
+            
+
+            const payload = {
+                DBSource: {
+                    modelDataSource,
+                    features: {
+                        targetf: targetColumn,
+                        featuref: parseFeatureColumns(),
+                    },
                 },
-                // include ingestion/source state if you want to submit them together
-            });
+                modelConfig: {
+                    modelName,
+                    modelParams: state,
+                    modelType: "Linear Regression",
+                },
+            };
+
+            console.log(payload)
+
+            try {
+                const res = await fetch(
+                    "http://localhost:8000/decision_tree_regressor",
+                    {
+                        method: "POST",
+                        mode: "cors", // optional
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify(payload),
+                    }
+                );
+
+                if (!res.ok) {
+                    const text = await res.text().catch(() => null);
+                    console.error("Server error:", res.status, text);
+                    alert(`Server returned ${res.status}`);
+                    return;
+                }
+
+                const data = await res.json().catch(() => null);
+                console.log("Training response:", data);
+                // do UI updates, notify user, etc.
+            } catch (err) {
+                console.error("Network / fetch error:", err);
+                alert(
+                    "Network or CORS error — check console and server CORS settings."
+                );
+            }
         },
-        [dispatch, state, modelName]
+        [dispatch, state, parseFeatureColumns, targetColumn, modelDataSource, modelName]
     );
 
     const handleReset = useCallback(() => {
@@ -337,6 +394,33 @@ export default function DecisionTreeForm() {
                             : "max-h-0 opacity-0"
                     }`}
                 >
+                    <label className="block">
+                        <span className="text-sm">Target Column</span>
+                        <input
+                            placeholder="Target Column"
+                            value={targetColumn}
+                            onChange={(e) =>
+                                setTargetColumn(e.target.value)
+                            }
+                            className="border p-2 rounded w-full mt-1"
+                            aria-label="Target Column"
+                        />
+                    </label>
+
+                    <label className="block">
+                        <span className="text-sm">
+                            Feature Columns (comma separated)
+                        </span>
+                        <input
+                            placeholder="col1, col2, col3"
+                            value={featureColumns}
+                            onChange={(e) =>
+                                handleFeatureColumnsChange(e.target.value)
+                            }
+                            className="border p-2 rounded w-full mt-1"
+                            aria-label="Feature Columns"
+                        />
+                    </label>
                     <div className="flex items-center gap-3">
                         <label className="min-w-[120px]">Criterion</label>
                         <select
@@ -449,7 +533,11 @@ export default function DecisionTreeForm() {
                             onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === "null") setField("maxFeatures", null);
-                                else if (v === "auto" || v === "sqrt" || v === "log2")
+                                else if (
+                                    v === "auto" ||
+                                    v === "sqrt" ||
+                                    v === "log2"
+                                )
                                     setField("maxFeatures", v as MaxFeatures);
                                 else {
                                     // allow numeric strings (e.g. "2")

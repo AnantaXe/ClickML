@@ -58,9 +58,9 @@ export default function IngestionForm() {
                             type="url"
                             required
                             pattern="https?://.+"
-                            placeholder="Host"
+                            placeholder="apiUrl"
                             value={String(
-                                sourceState.sourceConfig.host ?? ""
+                                sourceState.sourceConfig.apiUrl ?? ""
                             )}
                             onInvalid={(e) =>
                                 (
@@ -80,7 +80,7 @@ export default function IngestionForm() {
                                         ...sourceState,
                                         sourceConfig: {
                                             ...sourceState.sourceConfig,
-                                            host: e.target.value,
+                                            apiUrl: e.target.value,
                                         },
                                     })
                                 );

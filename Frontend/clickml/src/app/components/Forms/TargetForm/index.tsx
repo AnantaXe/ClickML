@@ -25,6 +25,7 @@ export default function TargetForm() {
 
     function handleTestConnection() {
         try {
+            console.log("Testing connection with config:", destination);
             if (!destination.destinationConfig.host) {
                 dispatch(
                     updateConnectionStatus({
@@ -41,7 +42,7 @@ export default function TargetForm() {
                     connectionMessage: "Testing connection...",
                 })
             );
-
+            console.log("Destination Config:", destination);
             const response = fetch(
                 "http://localhost:3002/etl/api/testconnection",
                 {
@@ -63,7 +64,7 @@ export default function TargetForm() {
                     );
                 })
                 .catch((error) => {
-                    console.error("Error in Test Connection:", error);
+                    console.error("Error in Test Connection:", "errormessage :", error);
                     dispatch(
                         updateConnectionStatus({
                             isConnected: -1,
@@ -97,7 +98,7 @@ export default function TargetForm() {
             body: JSON.stringify({
                 source: sourceState,
                 ingestion: alterIngestionFormState,
-                transformation: transformationConfigState,
+                transform: transformationConfigState,
                 destination: destination,
             })
         }).then((res) => res.json())

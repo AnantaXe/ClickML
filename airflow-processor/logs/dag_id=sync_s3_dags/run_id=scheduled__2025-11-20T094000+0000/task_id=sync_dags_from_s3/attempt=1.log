@@ -1,0 +1,27 @@
+[2025-11-20T09:45:05.993+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: sync_s3_dags.sync_dags_from_s3 scheduled__2025-11-20T09:40:00+00:00 [queued]>
+[2025-11-20T09:45:06.000+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: sync_s3_dags.sync_dags_from_s3 scheduled__2025-11-20T09:40:00+00:00 [queued]>
+[2025-11-20T09:45:06.001+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 2
+[2025-11-20T09:45:06.025+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): sync_dags_from_s3> on 2025-11-20 09:40:00+00:00
+[2025-11-20T09:45:06.031+0000] {standard_task_runner.py:57} INFO - Started process 3619 to run task
+[2025-11-20T09:45:06.038+0000] {standard_task_runner.py:84} INFO - Running: ['airflow', 'tasks', 'run', 'sync_s3_dags', 'sync_dags_from_s3', 'scheduled__2025-11-20T09:40:00+00:00', '--job-id', '67', '--raw', '--subdir', 'DAGS_FOLDER/syncDags.py', '--cfg-path', '/tmp/tmpawaxm05x']
+[2025-11-20T09:45:06.043+0000] {standard_task_runner.py:85} INFO - Job 67: Subtask sync_dags_from_s3
+[2025-11-20T09:45:06.118+0000] {task_command.py:416} INFO - Running <TaskInstance: sync_s3_dags.sync_dags_from_s3 scheduled__2025-11-20T09:40:00+00:00 [running]> on host f7ca760e979a
+[2025-11-20T09:45:06.224+0000] {taskinstance.py:1662} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='airflow' AIRFLOW_CTX_DAG_ID='sync_s3_dags' AIRFLOW_CTX_TASK_ID='sync_dags_from_s3' AIRFLOW_CTX_EXECUTION_DATE='2025-11-20T09:40:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-11-20T09:40:00+00:00'
+[2025-11-20T09:45:06.226+0000] {logging_mixin.py:154} INFO - Starting S3 -> local DAG sync
+[2025-11-20T09:45:06.233+0000] {base.py:73} INFO - Using connection ID 'aws-s3-clickml' for task execution.
+[2025-11-20T09:45:06.234+0000] {connection_wrapper.py:378} INFO - AWS Connection (conn_id='aws-s3-clickml', conn_type='aws') credentials retrieved from login and password.
+[2025-11-20T09:45:11.007+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/Parth.py (no change)
+[2025-11-20T09:45:11.012+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/TestingETL.py (no change)
+[2025-11-20T09:45:11.016+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/TestingETL2.py (no change)
+[2025-11-20T09:45:11.020+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/TestingETL3.py (no change)
+[2025-11-20T09:45:11.024+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/checkingETL.py (no change)
+[2025-11-20T09:45:11.027+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/db_to_db_sales_etl.py (no change)
+[2025-11-20T09:45:11.031+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/exampledag.py (no change)
+[2025-11-20T09:45:11.033+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/monthly_sales_pipeline5.py (no change)
+[2025-11-20T09:45:11.037+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/monthly_sales_pipeline7.py (no change)
+[2025-11-20T09:45:11.039+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/raghavETls.py (no change)
+[2025-11-20T09:45:11.040+0000] {logging_mixin.py:154} INFO - Skipped clickml-etl-dags/sdfsd.py (no change)
+[2025-11-20T09:45:11.043+0000] {python.py:194} INFO - Done. Returned value was: None
+[2025-11-20T09:45:11.049+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=sync_s3_dags, task_id=sync_dags_from_s3, execution_date=20251120T094000, start_date=20251120T094505, end_date=20251120T094511
+[2025-11-20T09:45:11.091+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0
+[2025-11-20T09:45:11.101+0000] {taskinstance.py:2778} INFO - 0 downstream tasks scheduled from follow-on schedule check

@@ -2,27 +2,18 @@
 import React, { useState, useCallback, useReducer } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks/hooks";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import {
-    updateModelDataSourceState,
-    resetModelDataSourceState,
-} from "@/redux/Model_Config/SourceSlices/SourceSlices";
+import { updateModelDataSourceState } from "@/redux/Model_Config/SourceSlices/SourceSlices";
 import {
     updateLinearRegressionConfig,
     resetLinearRegressionConfig,
 } from "@/redux/Model_Config/LinearRegressionSlices/LRSlices";
 
-type Regularization = "none" | "ridge" | "lasso";
-
 interface ModelState {
-    targetColumn: string;
-    featureColumns: string; // comma separated in UI
-    testSize: number;
     fitIntercept: boolean;
-    normalize: boolean;
     copyX: boolean;
-    regularization: Regularization;
-    regStrength: number;
-    randomState: number | "";
+    // regularization: Regularization;
+    // regStrength: number;
+    // randomState: number | "";
     nJobs: number | null;
 }
 
@@ -35,15 +26,11 @@ type Action =
     | { type: "RESET"; payload?: Partial<ModelState> };
 
 const initialModelState: ModelState = {
-    targetColumn: "",
-    featureColumns: "",
-    testSize: 0.2,
     fitIntercept: true,
-    normalize: false,
     copyX: true,
-    regularization: "none",
-    regStrength: 1.0,
-    randomState: "",
+    // regularization: "none",
+    // regStrength: 1.0,
+    // randomState: "",
     nJobs: null,
 };
 
@@ -59,15 +46,16 @@ function reducer(state: ModelState, action: Action): ModelState {
 }
 
 export default function LinearRegressionForm() {
-    
-
     const dispatch = useAppDispatch();
     const [state, localDispatch] = useReducer(reducer, initialModelState);
     const modelDataSource = useAppSelector(
         (state) => state.modelDataSourceConfig
     );
+    const [modelResponse, setModelResponse] = useState(null);
     const [modelName, setModelName] = React.useState("");
     const [open, setOpen] = useState(false);
+    const [targetColumn, setTargetColumn] = useState("");
+    const [featureColumns, setFeatureColumns] = useState("");
     /* ---------- handlers ---------- */
 
     const setField = useCallback(
@@ -81,36 +69,28 @@ export default function LinearRegressionForm() {
         (v: string) => {
             // normalize whitespace and commas
             const cleaned = v.replace(/\s*,\s*/g, ",").replace(/\s+/g, " ");
-            setField("featureColumns", cleaned);
+            setFeatureColumns(cleaned);
         },
-        [setField]
+        [setFeatureColumns]
     );
 
     const parseFeatureColumns = useCallback(() => {
-        return state.featureColumns
+        return featureColumns
             .split(",")
             .map((f) => f.trim())
             .filter(Boolean);
-    }, [state.featureColumns]);
+    }, [featureColumns]);
 
-    const clampTestSize = useCallback((v: number) => {
-        if (Number.isNaN(v)) return 0.2;
-        return Math.max(0, Math.min(1, v));
-    }, []);
+    // const clampTestSize = useCallback((v: number) => {
+    //     if (Number.isNaN(v)) return 0.2;
+    //     return Math.max(0, Math.min(1, v));
+    // }, []);
 
     const handleTrain = useCallback(
         async (e?: React.FormEvent) => {
             e?.preventDefault?.();
 
             // validate minimal constraints
-            if (state.testSize < 0 || state.testSize > 1) {
-                alert("Test size must be between 0 and 1");
-                return;
-            }
-            if (state.regStrength < 0) {
-                alert("Regularization strength must be >= 0");
-                return;
-            }
 
             dispatch(
                 updateLinearRegressionConfig({
@@ -124,7 +104,7 @@ export default function LinearRegressionForm() {
                 DBSource: {
                     modelDataSource,
                     features: {
-                        targetf: state.targetColumn,
+                        targetf: targetColumn,
                         featuref: parseFeatureColumns(),
                     },
                 },
@@ -134,6 +114,8 @@ export default function LinearRegressionForm() {
                     modelType: "Linear Regression",
                 },
             };
+
+            console.log("Submitting training payload:", payload);
 
             try {
                 const res = await fetch(
@@ -156,8 +138,8 @@ export default function LinearRegressionForm() {
                     return;
                 }
 
-                const data = await res.json().catch(() => null);
-                console.log("Training response:", data);
+                setModelResponse(await res.json().catch(() => null));
+                console.log("Training response:", modelResponse);
                 // do UI updates, notify user, etc.
             } catch (err) {
                 console.error("Network / fetch error:", err);
@@ -166,9 +148,16 @@ export default function LinearRegressionForm() {
                 );
             }
         },
-        [dispatch, state, parseFeatureColumns, modelDataSource, modelName]
+        [
+            dispatch,
+            state,
+            parseFeatureColumns,
+            modelResponse,
+            targetColumn,
+            modelDataSource,
+            modelName,
+        ]
     );
-
 
     const handleReset = useCallback(() => {
         localDispatch({ type: "RESET" });
@@ -213,19 +202,19 @@ export default function LinearRegressionForm() {
             {modelDataSource.sourceType === "postgres" && (
                 <div className="flex flex-col space-y-2 border p-3 rounded">
                     <input
-                        type="url"
+                        type="text"
                         required
-                        pattern="https?://.+"
+                        // pattern="https?://.+"
                         placeholder="Host"
                         value={String(modelDataSource.sourceDetails.host ?? "")}
-                        onInvalid={(e) =>
-                            (e.target as HTMLInputElement).setCustomValidity(
-                                "Please enter a valid URL starting with http:// or https://"
-                            )
-                        }
-                        onInput={(e) =>
-                            (e.target as HTMLInputElement).setCustomValidity("")
-                        }
+                        // onInvalid={(e) =>
+                        //     (e.target as HTMLInputElement).setCustomValidity(
+                        //         "Please enter a valid URL starting with http:// or https://"
+                        //     )
+                        // }
+                        // onInput={(e) =>
+                        //     (e.target as HTMLInputElement).setCustomValidity("")
+                        // }
                         onChange={(e) => {
                             dispatch(
                                 updateModelDataSourceState({
@@ -385,10 +374,10 @@ export default function LinearRegressionForm() {
                         <span className="text-sm">Target Column</span>
                         <input
                             placeholder="Target Column"
-                            value={state.targetColumn}
-                            onChange={(e) =>
-                                setField("targetColumn", e.target.value)
-                            }
+                            value={targetColumn}
+                            onChange={(e) => {
+                                setTargetColumn(e.target.value);
+                            }}
                             className="border p-2 rounded w-full mt-1"
                             aria-label="Target Column"
                         />
@@ -400,36 +389,15 @@ export default function LinearRegressionForm() {
                         </span>
                         <input
                             placeholder="col1, col2, col3"
-                            value={state.featureColumns}
-                            onChange={(e) =>
-                                handleFeatureColumnsChange(e.target.value)
-                            }
+                            value={featureColumns}
+                            onChange={(e) => {
+                                handleFeatureColumnsChange(e.target.value);
+                                setFeatureColumns(e.target.value);
+                            }}
                             className="border p-2 rounded w-full mt-1"
                             aria-label="Feature Columns"
                         />
                     </label>
-
-                    <div className="flex items-center gap-3">
-                        <label className="min-w-[90px]">Test Size</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            max={1}
-                            value={state.testSize}
-                            onChange={(e) =>
-                                setField(
-                                    "testSize",
-                                    clampTestSize(parseFloat(e.target.value))
-                                )
-                            }
-                            className="border p-2 rounded w-28"
-                            aria-label="Test Size"
-                        />
-                        <span className="text-sm text-gray-500">
-                            fraction (0 to 1)
-                        </span>
-                    </div>
 
                     <div className="flex items-center space-x-4">
                         <label className="flex items-center space-x-2">
@@ -444,8 +412,6 @@ export default function LinearRegressionForm() {
                             <span>Fit Intercept</span>
                         </label>
 
-        
-
                         <label className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
@@ -457,67 +423,6 @@ export default function LinearRegressionForm() {
                             />
                             <span>Copy X</span>
                         </label>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <label className="min-w-[120px]">Regularization</label>
-                        <select
-                            value={state.regularization}
-                            onChange={(e) =>
-                                setField(
-                                    "regularization",
-                                    e.target.value as Regularization
-                                )
-                            }
-                            className="border p-2 rounded"
-                        >
-                            <option value="none">None (OLS)</option>
-                            <option value="ridge">Ridge (L2)</option>
-                            <option value="lasso">Lasso (L1)</option>
-                        </select>
-
-                        {state.regularization !== "none" && (
-                            <input
-                                type="number"
-                                min={0}
-                                step="0.1"
-                                value={state.regStrength}
-                                onChange={(e) =>
-                                    setField(
-                                        "regStrength",
-                                        Math.max(
-                                            0,
-                                            parseFloat(e.target.value) || 0
-                                        )
-                                    )
-                                }
-                                className="border p-2 rounded w-32"
-                                placeholder="Alpha"
-                                aria-label="Regularization Strength"
-                            />
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <label className="min-w-[120px]">Random State</label>
-                        <input
-                            type="number"
-                            placeholder="optional"
-                            value={state.randomState}
-                            onChange={(e) =>
-                                setField(
-                                    "randomState",
-                                    e.target.value === ""
-                                        ? ""
-                                        : parseInt(e.target.value, 10)
-                                )
-                            }
-                            className="border p-2 rounded w-32"
-                            aria-label="Random State"
-                        />
-                        <span className="text-sm text-gray-500">
-                            seed for reproducibility
-                        </span>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -559,7 +464,11 @@ export default function LinearRegressionForm() {
                             Train Model
                         </button>
                     </div>
-
+                    <div>
+                        {modelResponse && (
+                            <pre>{JSON.stringify(modelResponse, null, 2)}</pre>
+                        )}
+                    </div>
                     <div className="text-sm text-gray-600">
                         Note: In this component `Save` updates the Linear
                         Regression Redux slice (fitIntercept, normalize, copyX,

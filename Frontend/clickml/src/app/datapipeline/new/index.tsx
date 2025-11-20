@@ -18,12 +18,11 @@ import {
     resetIngestionForm,
     resetMonitoringForm,
     resetTransformationForm,
-    updateIngestionForm,
     updateURLVerification,
+    updateSourceState,
     resetSelectedFields,
     resetURLVerification,
     updateTransformationConfig,
-    resetTransformationConfigState
 } from "@/redux/Features/FormStatesSlices/FormStateSlices";
 import {
     updateFilteredFieldsName,
@@ -38,6 +37,7 @@ export default function NewDataPipeline() {
     const [filterPreview, setFilterPreview] = useState(false);
 
     const ingestionFormState = useAppSelector((state) => state.ingestion);
+    const sourceState = useAppSelector((state) => state.sourceState);
     // const transformationFormState = useAppSelector(
     //     (state) => state.transformation
     // );
@@ -74,7 +74,7 @@ export default function NewDataPipeline() {
         if (
             !(
                 urlVerificationStatus.isValid === 1 &&
-                ingestionFormState.selectedFields?.length !== 0
+                FilteredFieldNames?.length !== 0
             )
         ) {
             setFilterMessage("Unable to proceed, Please check above !");
@@ -98,10 +98,13 @@ export default function NewDataPipeline() {
 
         dispatch(resetURLVerification());
 
+        console.log(sourceState)
         if (activeForm === "Ingestion") {
             // formData = JSON.stringify(ingestionFormState);
-            if (ingestionFormState.sourceType === "api") {
-                if (!ingestionFormState.sourceConfig.apiUrl) {
+            console.log(sourceState)
+            if (sourceState.sourceType === "api") {
+                console.log(sourceState)
+                if (!sourceState.sourceConfig.apiUrl) {
                     dispatch(
                         updateURLVerification({
                             isValid: -1,
@@ -116,9 +119,9 @@ export default function NewDataPipeline() {
                         urlVerificationMessage: "Validating...",
                     })
                 );
-                const apiUrl = ingestionFormState.sourceConfig.apiUrl;
-                const apiKey = ingestionFormState.sourceConfig.apiKey
-                    ? ingestionFormState.sourceConfig.apiKey
+                const apiUrl = sourceState.sourceConfig.apiUrl;
+                const apiKey = sourceState.sourceConfig.apiKey
+                    ? sourceState.sourceConfig.apiKey
                     : "";
                 const response = fetch(
                     "http://localhost:3002/etl/validateApi",
@@ -168,14 +171,14 @@ export default function NewDataPipeline() {
         dispatch(resetFieldNames());
         dispatch(resetSelectedFields());
         // setStepThreeLoading(false); // temporary Setting please remove later
-
+        console.log(sourceState)
         if (activeForm === "Ingestion") {
             const response = fetch("http://localhost:3002/etl/api/apipreview", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(ingestionFormState.sourceConfig),
+                body: JSON.stringify(sourceState.sourceConfig),
             })
                 .then((res) => res.json())
                 .then((data) => {
@@ -212,7 +215,9 @@ export default function NewDataPipeline() {
         dispatch(updateFilteredFieldsName(updatedFilteredFields));
         dispatch(
             // updateIngestionForm({ selectedFields: updatedFilteredFields })
-            updateTransformationConfig({ transformationLogic: { selectedFields: updatedFilteredFields } })
+            updateTransformationConfig({
+                transformationLogic: { selectedFields: updatedFilteredFields },
+            })
         );
     };
 
@@ -331,11 +336,7 @@ export default function NewDataPipeline() {
                                                 ? "hover:bg-green-900"
                                                 : "opacity-50 cursor-not-allowed"
                                         }`}
-                                        disabled={
-                                            urlVerificationStatus.isValid === 1
-                                                ? false
-                                                : true
-                                        }
+                                        
                                         onClick={() => handleSubmit(activeForm)}
                                     >
                                         Fetch Feautures
@@ -415,9 +416,9 @@ export default function NewDataPipeline() {
                                 </h3>
                                 <ul className="list-disc list-inside space-y-2 h-96 overflow-y-auto border-[1px] p-5">
                                     {(Array.isArray(
-                                        ingestionFormState.selectedFields
+                                        FilteredFieldNames
                                     )
-                                        ? ingestionFormState.selectedFields
+                                        ? FilteredFieldNames
                                         : []
                                     ).map((field: string, index: number) => (
                                         <li key={index}>
@@ -437,14 +438,14 @@ export default function NewDataPipeline() {
                                     type="submit"
                                     className={`bg-green-800 text-white py-3 px-5 rounded cursor-pointer ${
                                         urlVerificationStatus.isValid === 1 &&
-                                        ingestionFormState.selectedFields
+                                        FilteredFieldNames
                                             ?.length !== 0
                                             ? "hover:bg-green-900"
                                             : "opacity-50 cursor-not-allowed"
                                     }`}
                                     disabled={
                                         urlVerificationStatus.isValid === 1 &&
-                                        ingestionFormState.selectedFields
+                                        FilteredFieldNames
                                             ?.length !== 0
                                             ? false
                                             : true
@@ -469,7 +470,9 @@ export default function NewDataPipeline() {
                                             unoptimized={true}
                                         />
                                     </div>
-                                    <h1 className={`text-green-700`}>{filterMessage}</h1>
+                                    <h1 className={`text-green-700`}>
+                                        {filterMessage}
+                                    </h1>
                                 </div>
                             </div>
                         </div>

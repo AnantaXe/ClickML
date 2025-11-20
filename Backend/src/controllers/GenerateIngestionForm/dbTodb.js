@@ -52,3 +52,22 @@ exports.generate_db_to_db_ingestion = (ingestionForm, source, transform, destina
     logger.info("Ingestion DAG generated:", rendered);
     return rendered;
 }
+
+exports.generate_api_to_db_ingestion = (ingestionForm, source, transform, destination) => {
+    const rendered = nunjucks.render("apiTodb.njk", {
+        dag_id: ingestionForm.pipelineName,
+        description: ingestionForm.description || "Ingestion ETL DAG generated",
+        schedule: ingestionForm.cron || "@once",
+        sourceType: source.sourceType,
+        sourceConfig: JSON.stringify(source.sourceConfig, null, 2),
+        selectedFields: transform.transformationLogic.selectedFields,
+        transform_pythonFunction: null,
+        transform_featureList: null,
+        cleaning_rules: null,
+        destinationType: destination.destinationType,
+        destinationConfig: JSON.stringify(destination.destinationConfig, null, 2),
+        destinationTable: destination.destinationTable,
+    });
+    logger.info("Ingestion DAG generated:", rendered);
+    return rendered;
+}
