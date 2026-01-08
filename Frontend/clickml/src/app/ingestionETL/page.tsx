@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Database, Clock, Play } from "lucide-react";
 
 export default function IngestionForm() {
     const [form, setForm] = useState({
@@ -43,183 +44,242 @@ export default function IngestionForm() {
         alert(JSON.stringify(data, null, 2));
     };
 
+    const inputClasses =
+        "w-full bg-[#0a0a0a] border border-[#333333] text-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder-gray-600";
+    const labelClasses =
+        "block text-sm font-medium text-gray-400 mb-1 flex items-center gap-2";
+
     return (
-        <div className="max-w-xl mx-auto p-6">
-            <h1 className="text-xl font-bold mb-4">Data Ingestion Pipeline</h1>
-            <form onSubmit={handleSubmit} className="space-y-3">
-                <input
-                    name="pipeline_name"
-                    placeholder="Pipeline Name"
-                    value={form.pipeline_name}
-                    onChange={handleChange}
-                    className="w-full border rounded p-2"
-                />
+        <div className="max-w-4xl mx-auto space-y-8">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold text-white tracking-tight">
+                    Data Ingestion
+                </h1>
+                <p className="text-gray-400">
+                    Configure and schedule your data ingestion pipelines from
+                    various sources.
+                </p>
+            </div>
 
-                <select
-                    name="sourceType"
-                    value={form.sourceType}
-                    onChange={(e) =>
-                        setForm({ ...form, sourceType: e.target.value })
-                    }
-                    className="w-full border rounded p-2"
-                >
-                    <option value="">Select Source Type</option>
-                    <option value="postgres">Postgres</option>
-                    <option value="s3">AWS S3</option>
-                    <option value="api">REST API</option>
-                </select>
-
-                {/* Conditional fields for Postgres */}
-                {form.sourceType === "postgres" && (
-                    <div className="space-y-2 border p-3 rounded bg-gray-50">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-[#111111] border border-[#333333] rounded-xl p-6 space-y-6">
+                    <div>
+                        <label className={labelClasses}>Pipeline Name</label>
                         <input
-                            placeholder="Host"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "host",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Port"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "port",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Database"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "database",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="User"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "user",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Password"
-                            type="password"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "password",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
+                            name="pipeline_name"
+                            placeholder="e.g. Daily User Logs Ingestion"
+                            value={form.pipeline_name}
+                            onChange={handleChange}
+                            className={inputClasses}
                         />
                     </div>
-                )}
 
-                {/* Conditional fields for API */}
-                {form.sourceType === "api" && (
-                    <div className="space-y-2 border p-3 rounded bg-gray-50">
-                        <input
-                            placeholder="API Endpoint"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "endpoint",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="API Key (optional)"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "apiKey",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className={labelClasses}>
+                                <Database className="w-4 h-4" />
+                                Source Type
+                            </label>
+                            <select
+                                name="sourceType"
+                                value={form.sourceType}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        sourceType: e.target.value,
+                                    })
+                                }
+                                className={inputClasses}
+                            >
+                                <option value="">Select Source Type</option>
+                                <option value="postgres">
+                                    Postgres Database
+                                </option>
+                                <option value="s3">AWS S3</option>
+                                <option value="api">REST API</option>
+                            </select>
+                        </div>
                     </div>
-                )}
 
-                {/* Conditional fields for S3 */}
-                {form.sourceType === "s3" && (
-                    <div className="space-y-2 border p-3 rounded bg-gray-50">
+                    {/* Conditional fields for Postgres */}
+                    {form.sourceType === "postgres" && (
+                        <div className="space-y-4 p-4 border border-[#333333] border-dashed rounded-lg bg-[#0a0a0a]/50">
+                            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider mb-2">
+                                Postgres Configuration
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input
+                                    placeholder="Host (e.g. localhost)"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "host",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Port (e.g. 5432)"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "port",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Database Name"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "database",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Username"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "user",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Password"
+                                    type="password"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "password",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Conditional fields for API */}
+                    {form.sourceType === "api" && (
+                        <div className="space-y-4 p-4 border border-[#333333] border-dashed rounded-lg bg-[#0a0a0a]/50">
+                            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider mb-2">
+                                API Configuration
+                            </h3>
+                            <input
+                                placeholder="API Endpoint URL"
+                                onChange={(e) =>
+                                    handleNestedChange(
+                                        "sourceConfig",
+                                        "endpoint",
+                                        e.target.value
+                                    )
+                                }
+                                className={inputClasses}
+                            />
+                            <input
+                                placeholder="API Key (Optional)"
+                                onChange={(e) =>
+                                    handleNestedChange(
+                                        "sourceConfig",
+                                        "apiKey",
+                                        e.target.value
+                                    )
+                                }
+                                className={inputClasses}
+                            />
+                        </div>
+                    )}
+
+                    {/* Conditional fields for S3 */}
+                    {form.sourceType === "s3" && (
+                        <div className="space-y-4 p-4 border border-[#333333] border-dashed rounded-lg bg-[#0a0a0a]/50">
+                            <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider mb-2">
+                                AWS S3 Configuration
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input
+                                    placeholder="Bucket Name"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "bucket",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Region (e.g. us-east-1)"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "region",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Access Key ID"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "accessKey",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                                <input
+                                    placeholder="Secret Access Key"
+                                    type="password"
+                                    onChange={(e) =>
+                                        handleNestedChange(
+                                            "sourceConfig",
+                                            "secretKey",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className={labelClasses}>
+                            <Clock className="w-4 h-4" />
+                            Schedule (Cron Expression)
+                        </label>
                         <input
-                            placeholder="Bucket Name"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "bucket",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
+                            name="cron"
+                            placeholder="e.g. 0 2 * * *"
+                            value={form.cron}
+                            onChange={handleChange}
+                            className={inputClasses}
                         />
-                        <input
-                            placeholder="Region"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "region",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Access Key"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "accessKey",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Secret Key"
-                            type="password"
-                            onChange={(e) =>
-                                handleNestedChange(
-                                    "sourceConfig",
-                                    "secretKey",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            Define when this pipeline should run. Defaults to 2
+                            AM daily.
+                        </p>
                     </div>
-                )}
+                </div>
 
-                <input
-                    name="cron"
-                    placeholder="Cron (e.g. 0 2 * * *)"
-                    value={form.cron}
-                    onChange={handleChange}
-                    className="w-full border rounded p-2"
-                />
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                    Create Pipeline
-                </button>
+                <div className="flex justify-end">
+                    <button className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-lg shadow-blue-900/20">
+                        <Play className="w-4 h-4 mr-2" />
+                        Create Pipeline
+                    </button>
+                </div>
             </form>
         </div>
     );
