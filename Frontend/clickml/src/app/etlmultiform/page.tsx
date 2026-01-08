@@ -1,17 +1,21 @@
 "use client";
 import { useState } from "react";
-
-const scenarios = ["ingestion", "transformation", "enrichment", "monitoring"];
+import {
+    Database,
+    FileText,
+    Activity,
+    LayoutList,
+    ChevronRight,
+    Play,
+} from "lucide-react";
 
 export default function PipelineWizard() {
     const [active, setActive] = useState("ingestion");
-
-    const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-
     const [resultPreview, setResultPreview] = useState<
         Record<string, unknown>[]
     >([]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [formData, setFormData] = useState<any>({
         ingestion: {
             pipeline_name: "",
@@ -45,47 +49,32 @@ export default function PipelineWizard() {
         },
     });
 
+    const scenarios = [
+        { id: "ingestion", label: "Ingestion", icon: Database },
+        { id: "transformation", label: "Transformation", icon: LayoutList },
+        { id: "enrichment", label: "Enrichment", icon: FileText },
+        { id: "monitoring", label: "Monitoring", icon: Activity },
+    ];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChange = (scenario: string, field: string, value: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setFormData((prev: any) => ({
             ...prev,
             [scenario]: { ...prev[scenario], [field]: value },
         }));
     };
 
-    function toggleFeature(key: string) {
-        setSelectedFeatures((prev) =>
-            prev.includes(key) ? prev.filter((f) => f !== key) : [...prev, key]
-        );
-    }
-
-    const handleNestedChange = (
-        scenario: string,
-        configKey: string,
-        field: string,
-        value: string
-    ) => {
-        setFormData((prev: any) => ({
-            ...prev,
-            [scenario]: {
-                ...prev[scenario],
-                [configKey]: { ...prev[scenario][configKey], [field]: value },
-            },
-        }));
-    };
-
     const handleSubmit = () => {
-        alert(
-            JSON.stringify({ scenario: active, ...formData[active] }, null, 2)
-        );
+        const payload = { scenario: active, ...formData[active] };
+
         fetch("http://localhost:3002/etl/validateData", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ scenario: active, ...formData[active] }),
+            body: JSON.stringify(payload),
         })
             .then((res) => res.json())
             .then((data) => {
-                console.log("Pipeline response:", data);
-                // const json = data;
                 const normalized = Array.isArray(data) ? data : [data];
                 setResultPreview(normalized);
                 alert("Pipeline submitted successfully!");
@@ -96,493 +85,308 @@ export default function PipelineWizard() {
             });
     };
 
+    const inputClasses =
+        "w-full bg-[#0a0a0a] border border-[#333333] text-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all placeholder-gray-600";
+    const labelClasses = "block text-sm font-medium text-gray-400 mb-1";
+
     return (
-        <div className="max-w-2xl mx-auto p-6">
-            {/* Navbar */}
-            <div className="flex space-x-4 border-b mb-6">
-                {scenarios.map((s) => (
-                    <button
-                        key={s}
-                        onClick={() => setActive(s)}
-                        className={`px-4 py-2 capitalize ${
-                            active === s
-                                ? "border-b-2 border-emerald-700 font-bold"
-                                : "text-gray-500"
-                        }`}
-                    >
-                        {s}
-                    </button>
-                ))}
+        <div className="max-w-6xl mx-auto space-y-8">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold text-white tracking-tight">
+                    ETL Pipeline Wizard
+                </h1>
+                <p className="text-gray-400">
+                    Create complex multi-stage pipelines in a single flow.
+                </p>
             </div>
 
-            {/* Sliding Window */}
-            <div className="transition-all duration-500">
-                {active === "ingestion" && (
-                    <div className="space-y-3">
-                        <h2 className="font-bold text-xl">
-                            Ingestion Pipeline
-                        </h2>
-                        <input
-                            placeholder="Pipeline Name"
-                            value={formData.ingestion.pipeline_name}
-                            onChange={(e) =>
-                                handleChange(
-                                    "ingestion",
-                                    "pipeline_name",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <select
-                            value={formData.ingestion.sourceType}
-                            onChange={(e) =>
-                                handleChange(
-                                    "ingestion",
-                                    "sourceType",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        >
-                            <option value="">Select Source</option>
-                            <option value="postgres">Postgres</option>
-                            <option value="api">API</option>
-                            <option value="s3">S3</option>
-                        </select>
-
-                        {formData.ingestion.sourceType === "postgres" && (
-                            <div className="space-y-2 border p-3 rounded">
-                                <input
-                                    type="url"
-                                    required
-                                    pattern="https?://.+"
-                                    placeholder="Host"
-                                    value={formData.ingestion.sourceConfig.host}
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "host",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    placeholder="Database"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "database",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Table Name"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "tableName",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    placeholder="User"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "user",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "password",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                            </div>
-                        )}
-
-                        {formData.ingestion.sourceType === "api" && (
-                            <div className="space-y-2 border p-3 rounded">
-                                <input
-                                    type="text"
-                                    placeholder="API URL"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "apiUrl",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="API Key"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "apiKey",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                            </div>
-                        )}
-
-                        {formData.ingestion.sourceType === "s3" && (
-                            <div className="space-y-2 border p-3 rounded">
-                                <input
-                                    type="text"
-                                    placeholder="Bucket Name"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "bucketName",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="AWS Access Key"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "awsAccessKey",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="AWS Secret Key"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "sourceConfig",
-                                            "awsSecretKey",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                            </div>
-                        )}
-
-                        <select
-                            value={formData.ingestion.destinationType}
-                            onChange={(e) =>
-                                handleChange(
-                                    "ingestion",
-                                    "destinationType",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        >
-                            <option value="">Select Destination</option>
-                            <option value="postgres">Postgres</option>
-                            <option value="s3">S3</option>
-                        </select>
-
-                        {formData.ingestion.destinationType === "postgres" && (
-                            <div className="space-y-2 border p-3 rounded">
-                                <input
-                                    placeholder="Host"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "host",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    placeholder="Database"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "database",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    placeholder="User"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "user",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "password",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                            </div>
-                        )}
-
-                        {formData.ingestion.destinationType === "s3" && (
-                            <div className="space-y-2 border p-3 rounded">
-                                <input
-                                    type="text"
-                                    placeholder="Bucket Name"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "bucket",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="AWS Access Key"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "aws_access_key",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder="AWS Secret Key"
-                                    onChange={(e) =>
-                                        handleNestedChange(
-                                            "ingestion",
-                                            "destinationConfig",
-                                            "aws_secret_key",
-                                            e.target.value
-                                        )
-                                    }
-                                    className="w-full border p-2 rounded"
-                                />
-                            </div>
-                        )}
-
-                        <h3 className="font-semibold">Schedule (Cron)</h3>
-                        <input
-                            placeholder="Cron (e.g. 0 * * * *)"
-                            value={formData.ingestion.cron}
-                            onChange={(e) =>
-                                handleChange(
-                                    "ingestion",
-                                    "cron",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                    </div>
-                )}
-
-                {active === "transformation" && (
-                    <div className="space-y-3">
-                        <h2 className="font-bold text-xl">
-                            Transformation Pipeline
-                        </h2>
-                        <input
-                            placeholder="Pipeline Name"
-                            value={formData.transformation.pipeline_name}
-                            onChange={(e) =>
-                                handleChange(
-                                    "transformation",
-                                    "pipeline_name",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <textarea
-                            placeholder="SQL or Pandas logic"
-                            value={formData.transformation.transformationLogic}
-                            onChange={(e) =>
-                                handleChange(
-                                    "transformation",
-                                    "transformationLogic",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded h-32"
-                        />
-                    </div>
-                )}
-
-                {active === "enrichment" && (
-                    <div className="space-y-3">
-                        <h2 className="font-bold text-xl">
-                            Enrichment Pipeline
-                        </h2>
-                        <input
-                            placeholder="Pipeline Name"
-                            value={formData.enrichment.pipeline_name}
-                            onChange={(e) =>
-                                handleChange(
-                                    "enrichment",
-                                    "pipeline_name",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Enrichment API"
-                            value={formData.enrichment.enrichmentApi}
-                            onChange={(e) =>
-                                handleChange(
-                                    "enrichment",
-                                    "enrichmentApi",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="API Key"
-                            value={formData.enrichment.apiKey}
-                            onChange={(e) =>
-                                handleChange(
-                                    "enrichment",
-                                    "apiKey",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                    </div>
-                )}
-
-                {active === "monitoring" && (
-                    <div className="space-y-3">
-                        <h2 className="font-bold text-xl">
-                            Monitoring Pipeline
-                        </h2>
-                        <input
-                            placeholder="Pipeline Name"
-                            value={formData.monitoring.pipeline_name}
-                            onChange={(e) =>
-                                handleChange(
-                                    "monitoring",
-                                    "pipeline_name",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Metric (row_count, latency)"
-                            value={formData.monitoring.metric}
-                            onChange={(e) =>
-                                handleChange(
-                                    "monitoring",
-                                    "metric",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                        <input
-                            placeholder="Alert Email"
-                            value={formData.monitoring.alertEmail}
-                            onChange={(e) =>
-                                handleChange(
-                                    "monitoring",
-                                    "alertEmail",
-                                    e.target.value
-                                )
-                            }
-                            className="w-full border p-2 rounded"
-                        />
-                    </div>
-                )}
-            </div>
-
-            {/* Submit Button */}
-            <div className="mt-6">
-                <button
-                    onClick={handleSubmit}
-                    className="bg-emerald-800 text-white px-4 py-2 rounded"
-                >
-                    Save {active} Pipeline
-                </button>
-            </div>
-
-            {/* Result Preview */}
-            <div>
-                <h2></h2>
-                <h3>Result Preview</h3>
-                <ul>
-                    {Array.isArray(resultPreview) &&
-                        resultPreview.map((item, index) => (
-                            <label
-                                key={index}
-                                className="flex items-center space-x-2"
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* Sidebar Navigation */}
+                <div className="lg:w-64 flex-shrink-0">
+                    <div className="bg-[#111111] border border-[#333333] rounded-xl p-2 space-y-1">
+                        {scenarios.map((s) => (
+                            <button
+                                key={s.id}
+                                onClick={() => setActive(s.id)}
+                                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all ${
+                                    active === s.id
+                                        ? "bg-blue-600 text-white shadow-lg"
+                                        : "text-gray-400 hover:bg-[#222222] hover:text-white"
+                                }`}
                             >
-                                <input
-                                    type="checkbox"
-                                    checked={selectedFeatures.includes(
-                                        JSON.stringify(item)
-                                    )}
-                                    onChange={() =>
-                                        toggleFeature(JSON.stringify(item))
-                                    }
-                                />
-                                <span>{JSON.stringify(item)}</span>
-                            </label>
+                                <div className="flex items-center gap-3">
+                                    <s.icon className="w-4 h-4" />
+                                    {s.label}
+                                </div>
+                                {active === s.id && (
+                                    <ChevronRight className="w-4 h-4" />
+                                )}
+                            </button>
                         ))}
-                </ul>
+                    </div>
+                </div>
+
+                {/* Main Form Area */}
+                <div className="flex-1 space-y-6">
+                    <div className="bg-[#111111] border border-[#333333] rounded-xl p-8 space-y-6 min-h-[500px]">
+                        {active === "ingestion" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <h2 className="text-xl font-semibold text-white border-b border-[#333333] pb-4 mb-6">
+                                    Ingestion Configuration
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>
+                                            Pipeline Name
+                                        </label>
+                                        <input
+                                            value={
+                                                formData.ingestion.pipeline_name
+                                            }
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    "ingestion",
+                                                    "pipeline_name",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className={inputClasses}
+                                            placeholder="Ingestion Pipeline Name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>
+                                            Cron Schedule
+                                        </label>
+                                        <input
+                                            value={formData.ingestion.cron}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    "ingestion",
+                                                    "cron",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className={inputClasses}
+                                            placeholder="0 * * * *"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>
+                                            Source Type
+                                        </label>
+                                        <select
+                                            value={
+                                                formData.ingestion.sourceType
+                                            }
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    "ingestion",
+                                                    "sourceType",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className={inputClasses}
+                                        >
+                                            <option value="">
+                                                Select Source
+                                            </option>
+                                            <option value="postgres">
+                                                Postgres
+                                            </option>
+                                            <option value="api">API</option>
+                                            <option value="s3">S3</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>
+                                            Destination Type
+                                        </label>
+                                        <select
+                                            value={
+                                                formData.ingestion
+                                                    .destinationType
+                                            }
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    "ingestion",
+                                                    "destinationType",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className={inputClasses}
+                                        >
+                                            <option value="">
+                                                Select Destination
+                                            </option>
+                                            <option value="postgres">
+                                                Postgres
+                                            </option>
+                                            <option value="s3">S3</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {(formData.ingestion.sourceType ===
+                                    "postgres" ||
+                                    formData.ingestion.sourceType === "api" ||
+                                    formData.ingestion.sourceType === "s3") && (
+                                    <div className="p-4 bg-[#0a0a0a] border border-[#333333] rounded-lg mt-4">
+                                        <p className="text-sm text-gray-500 italic text-center">
+                                            Specific configuration fields not
+                                            fully replicated for brevity in
+                                            wizard view. (Use main Ingestion
+                                            page for full details)
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {active === "transformation" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <h2 className="text-xl font-semibold text-white border-b border-[#333333] pb-4 mb-6">
+                                    Transformation Logic
+                                </h2>
+                                <input
+                                    value={
+                                        formData.transformation.pipeline_name
+                                    }
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "transformation",
+                                            "pipeline_name",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                    placeholder="Pipeline Name"
+                                />
+                                <textarea
+                                    value={
+                                        formData.transformation
+                                            .transformationLogic
+                                    }
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "transformation",
+                                            "transformationLogic",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={`${inputClasses} h-48 font-mono`}
+                                    placeholder="SELECT * FROM table..."
+                                />
+                            </div>
+                        )}
+
+                        {active === "enrichment" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <h2 className="text-xl font-semibold text-white border-b border-[#333333] pb-4 mb-6">
+                                    Enrichment Sources
+                                </h2>
+                                <input
+                                    value={formData.enrichment.pipeline_name}
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "enrichment",
+                                            "pipeline_name",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                    placeholder="Pipeline Name"
+                                />
+                                <input
+                                    value={formData.enrichment.enrichmentApi}
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "enrichment",
+                                            "enrichmentApi",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                    placeholder="API Endpoint"
+                                />
+                            </div>
+                        )}
+
+                        {active === "monitoring" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <h2 className="text-xl font-semibold text-white border-b border-[#333333] pb-4 mb-6">
+                                    Monitoring & Alerts
+                                </h2>
+                                <input
+                                    value={formData.monitoring.pipeline_name}
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "monitoring",
+                                            "pipeline_name",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                    placeholder="Pipeline Name"
+                                />
+                                <input
+                                    value={formData.monitoring.metric}
+                                    onChange={(e) =>
+                                        handleChange(
+                                            "monitoring",
+                                            "metric",
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClasses}
+                                    placeholder="Metric to Track"
+                                />
+                            </div>
+                        )}
+
+                        <div className="pt-6 border-t border-[#333333] flex justify-end">
+                            <button
+                                onClick={handleSubmit}
+                                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                            >
+                                <Play className="w-4 h-4 mr-2" />
+                                Run{" "}
+                                {active.charAt(0).toUpperCase() +
+                                    active.slice(1)}{" "}
+                                Step
+                            </button>
+                        </div>
+                    </div>
+
+                    {resultPreview.length > 0 && (
+                        <div className="bg-[#111111] border border-[#333333] rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">
+                                Result Preview
+                            </h3>
+                            <div className="h-64 overflow-y-auto bg-[#0a0a0a] rounded-lg p-4 font-mono text-sm text-gray-300 border border-[#333333]">
+                                {resultPreview.map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className="mb-2 pb-2 border-b border-[#333333] last:border-0 last:mb-0 last:pb-0"
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <input
+                                                type="checkbox"
+                                                className="mt-1 rounded border-gray-600 bg-[#222222]"
+                                            />
+                                            <pre className="whitespace-pre-wrap">
+                                                {JSON.stringify(item, null, 2)}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
