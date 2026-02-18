@@ -1,4 +1,4 @@
-# 🚀 ClickML – End-to-End ML Lifecycle Platform 
+# ClickML – End-to-End ML Lifecycle Platform 
 
 #### ClickML is a modular, full-stack MLOps platform that converts UI-based workflow actions into executable machine learning jobs.
 #### It manages the complete ML lifecycle — from data ingestion and preprocessing to pretraining, fine-tuning, quantization, registry tracking, and deployment.
@@ -7,21 +7,24 @@
 <img width="959" height="446" alt="image" src="https://github.com/user-attachments/assets/c4a4643a-d59c-416c-a8cc-07b38055f10e" />
 ---
 
-## 📚 Table of Contents
-## 📑 Table of Contents
+## Table of Contents
 
-- [🎯 Vision](#-vision)
+- [System Architecture](#system-architecture)
+- [Vision](#vision)
 - [Objectives](#objectives)
-- [🧠 Core Capabilities](#-core-capabilities)
-- [🏗️ System Architecture](#%EF%B8%8F-system-architecture)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [⚙️ Installation & Setup](#️-installation--setup)
-- [🔄 Example Workflow](#-example-workflow-in-clickml)
-- [📊 Why ClickML Stands Out](#-why-clickml-stands-out)
-- [🔐 Future Roadmap](#-future-roadmap)
+- [Core Capabilities](#core-capabilities)
+- [Example Workflow](#example-workflow-in-clickml)
+- [Why ClickML Stands Out](#why-clickml-stands-out)
+- [Future Roadmap](#future-roadmap)
 
-  
-## 🎯 Vision
+# System Architecture
+
+ClickML follows a modular microservice-style structure:
+
+<img width="6261" height="3824" alt="ClickMLPlatform" src="https://github.com/user-attachments/assets/237bff55-c5be-4d23-aeac-85875503a9e7" />
+
+---
+## Vision
 
 ClickML simplifies complex ML engineering workflows into structured, traceable pipelines without sacrificing flexibility or control.
 
@@ -42,7 +45,7 @@ It is built for:
 - To deploy ML models via API endpoints.
 - To create a robust frontend for seamless user interaction.
 
-# 🧠 Core Capabilities
+# Core Capabilities
 
 ## 1️⃣ Data Governance & ETL Engine
 - Structured dataset ingestion
@@ -82,59 +85,11 @@ It is built for:
 
 ---
 
-# 🏗️ System Architecture
-
-ClickML follows a modular microservice-style structure:
-
-<img width="6261" height="3824" alt="ClickMLPlatform" src="https://github.com/user-attachments/assets/237bff55-c5be-4d23-aeac-85875503a9e7" />
-
-
-
----
-
-# 🛠️ Tech Stack
-
-| Layer              | Technology Used |
-|-------------------|----------------|
-| Frontend          | TypeScript + React |
-| Backend API       | Python + FastAPI |
-| Workflow Engine   | Apache Airflow |
-| ML Framework      | PyTorch / Scikit-learn |
-| Containerization  | Docker |
-| Orchestration     | Docker Compose |
-
----
-
-# ⚙️ Installation & Setup
-
-## 🔹 Prerequisites
-
-- Python 3.9+
-- Node.js 18+
-- Docker & Docker Compose
-- Git
-
----
-## 🔹 Backend Setup
-cd Backend
-
-pip install -r requirements.txt
-
-## 🔹 Frontend Setup
-cd Frontend/clickml
-
-npm install
-
-npm run dev
-
-## 🔹 Start Full System (Recommended)
-docker compose up --build
-
-## 🔄 Example Workflow in ClickML
+## Example Workflow in ClickML
 
 <img width="4933" height="2942" alt="image" src="https://github.com/user-attachments/assets/f7a13b1c-4d8d-4dcf-a3dd-a5d7f8ec22a1" />
 
-# 📊 Why ClickML Stands Out
+# Why ClickML Stands Out
 
 - Full ML lifecycle coverage
 - Built-in reproducibility
@@ -143,7 +98,7 @@ docker compose up --build
 - Registry-driven deployment
 - Modular & scalable architecture
 
-# 🔐 Future Roadmap
+# Future Roadmap
 
 - RAG pipeline integration
 
