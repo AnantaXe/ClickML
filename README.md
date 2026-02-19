@@ -1,7 +1,6 @@
 <div align="center">
   
-# ClickML
-#### build MLOps workflow (just click, save and use)
+<img width="5624" height="1224" alt="ClickMLBanner" src="https://github.com/user-attachments/assets/8c3ff6c2-f378-44e2-bd91-54ad79e12440" />
 
 ![Static Badge](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Static Badge](https://img.shields.io/badge/Build_ClickML_Docker_Images-passing-green?logo=github)
